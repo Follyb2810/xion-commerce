@@ -1,0 +1,102 @@
+chatHistory: [{ type: Schema.Types.ObjectId, ref: 'Chat' }]
+import mongoose, { Schema, Document } from 'mongoose';
+
+interface IMessage {
+    sender: string; // User ID of sender
+    receiver: string; // User ID of receiver
+    message: string;
+    timestamp: Date;
+}
+
+interface IChat extends Document {
+    users: string[]; // Array of user IDs (2 users per chat)
+    messages: IMessage[];
+}
+
+const chatSchema: Schema = new Schema<IChat>(
+    {
+        users: [{ type: String, required: true }], // Store user IDs
+        messages: [
+            {
+                sender: { type: String, required: true },
+                receiver: { type: String, required: true },
+                message: { type: String, required: true },
+                timestamp: { type: Date, default: Date.now }
+            }
+        ]
+    },
+    { timestamps: true }
+);
+
+export default mongoose.model<IChat>('Chat', chatSchema);
+
+import { Server, Socket } from 'socket.io';
+import ChatModel from './models/Chat'; // Import your Chat schema
+
+const io = new Server(3000, {
+    cors: { origin: '*' } // Allow all origins for testing
+});
+
+interface CustomSocket extends Socket {
+    userId?: string;
+}
+
+io.on('connection', (socket: CustomSocket) => {
+    console.log('User connected:', socket.id);
+
+    // When a user joins, store their userId (you can get it from frontend auth)
+    socket.on('join', (userId: string) => {
+        socket.userId = userId;
+        console.log(`${userId} joined the chat`);
+    });
+
+    // Handle sending messages
+    socket.on('sendMessage', async ({ sender, receiver, message }) => {
+        try {
+            let chat = await ChatModel.findOne({ users: { $all: [sender, receiver] } });
+
+            if (!chat) {
+                chat = new ChatModel({ users: [sender, receiver], messages: [] });
+            }
+
+            const newMessage = {
+                sender,
+                receiver,
+                message,
+                timestamp: new Date()
+            };
+
+            chat.messages.push(newMessage);
+            await chat.save();
+
+            // Emit the message to the receiver
+            io.to(receiver).emit('receiveMessage', newMessage);
+        } catch (error) {
+            console.error('Error sending message:', error);
+        }
+    });
+
+    // Handle disconnection
+    socket.on('disconnect', () => {
+        console.log('User disconnected:', socket.id);
+    });
+});
+
+import { io } from "socket.io-client";
+
+const socket = io("http://localhost:3000");
+
+// Join chat as a specific user
+socket.emit("join", "USER_ID_1");
+
+// Send a message
+socket.emit("sendMessage", {
+    sender: "USER_ID_1",
+    receiver: "USER_ID_2",
+    message: "Hello!"
+});
+
+// Listen for incoming messages
+socket.on("receiveMessage", (message) => {
+    console.log("New message:", message);
+});
