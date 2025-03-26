@@ -6,5 +6,6 @@ exports.allowedOrigins = [
     "http://localhost:5173",
     "https://warp-commerce.vercel.app",
     "https://follyb.vercel.app",
-    'https://warp-commerce.onrender.com'
+    'https://warp-commerce.onrender.com',
+    'https://chaincart.vercel.app'
 ];

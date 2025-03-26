@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkout = exports.processPayment = exports.checkCartProductAvailable = exports.deleteUserCart = exports.removeCart = exports.getCart = exports.addToCart = void 0;
+exports.checkout = exports.checkCartProductAvailable = exports.deleteUserCart = exports.removeCart = exports.getCart = exports.addToCart = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const CartRepository_1 = __importDefault(require("../repositories/CartRepository"));
 const mongoose_1 = require("mongoose");
@@ -107,65 +107,12 @@ exports.deleteUserCart = (0, express_async_handler_1.default)((req, res) => __aw
     yield CartRepository_1.default.deleteById(req.params.cartId);
     (0, ResponseHandler_1.ResponseHandler)(res, 200, "Cart deleted successfully");
 }));
+//? single product processPayment
+// Process payment for a single product in the cart
 exports.checkCartProductAvailable = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { quantity } = req.body;
     const { product, seller } = req;
     (0, ResponseHandler_1.ResponseHandler)(res, 200, "Product available", (0, ProductResponse_1.formatProductResponse)(product, seller, quantity));
-}));
-//? single product processPayment
-// Process payment for a single product in the cart
-exports.processPayment = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
-    const userId = req._id;
-    const { productId, quantity, transactionHash } = req.body;
-    if (!mongoose_1.Types.ObjectId.isValid(productId)) {
-        return (0, ResponseHandler_1.ErrorHandler)(res, "INVALID_PRODUCT_ID", 400);
-    }
-    let cart = yield CartRepository_1.default.findByEntity({ user: new mongoose_1.Types.ObjectId(userId) });
-    if (!cart) {
-        return (0, ResponseHandler_1.ErrorHandler)(res, "CART_NOT_FOUND", 404);
-    }
-    const itemIndex = cart.items.findIndex((item) => item.product.toString() === productId);
-    if (itemIndex === -1) {
-        return (0, ResponseHandler_1.ErrorHandler)(res, "PRODUCT_NOT_IN_CART", 404);
-    }
-    const productItem = cart.items[itemIndex];
-    if (quantity > productItem.quantity) {
-        return (0, ResponseHandler_1.ErrorHandler)(res, "INVALID_QUANTITY", 400);
-    }
-    const product = yield ProductRepository_1.default.findById(productId);
-    if (!product) {
-        return (0, ResponseHandler_1.ErrorHandler)(res, "PRODUCT_NOT_FOUND", 404);
-    }
-    if (product.stock < quantity) {
-        return (0, ResponseHandler_1.ErrorHandler)(res, "INSUFFICIENT_STOCK", 400);
-    }
-    yield ProductRepository_1.default.updateById(productId, {
-        $inc: { stock: -quantity }
-    });
-    yield UserRepository_1.default.updateById(userId, {
-        $push: {
-            history: {
-                paid: productItem.price * quantity,
-                item: new mongoose_1.Types.ObjectId(productId),
-                timestamp: new Date(),
-                transactionHash: transactionHash || new mongoose_1.Types.ObjectId().toString(),
-            },
-        },
-    });
-    if (quantity === productItem.quantity) {
-        cart.items.splice(itemIndex, 1);
-    }
-    else {
-        cart.items[itemIndex].quantity -= quantity;
-    }
-    cart.total = cart.items.reduce((acc, item) => acc + item.quantity * item.price, 0);
-    yield cart.save();
-    (0, ResponseHandler_1.ResponseHandler)(res, 200, 'Payment recorded successfully', {
-        transactionHash,
-        updatedStock: product.stock - quantity,
-        remainingQuantityInCart: cart.items.length > 0 ? ((_a = cart.items[itemIndex]) === null || _a === void 0 ? void 0 : _a.quantity) || 0 : 0
-    });
 }));
 //? all product on the checkout
 //? // Checkout all items in the cart
