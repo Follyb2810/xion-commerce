@@ -48,21 +48,14 @@ exports.authWallet = (0, express_async_handler_1.default)((req, res) => __awaite
     });
     const result = (0, IAuthResponse_1.UserResponse)(user);
     (0, ResponseHandler_1.ResponseHandler)(res, 200, 'User Successfull login or Register', { accessToken, result });
-    // return;
-    // res.status(200).json({ accessToken, result });
 }));
 exports.updateProfile = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { walletAddress, email, name, username, bio, avatar } = req.body;
     const userId = req._id;
-    console.log(userId);
     if (!userId) {
         res.status(401).json({ message: "Unauthorized" });
         return;
     }
-    // if (!MongodbValidate.validateCosmosAddress(walletAddress)) {
-    //     res.status(400).json({ message: "Invalide cosmos wallet address" });
-    //     return;
-    // }
     const user = yield userRepository.findById(userId);
     if (!user) {
         res.status(404).json({ message: "User not found" });

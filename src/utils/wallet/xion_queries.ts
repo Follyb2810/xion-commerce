@@ -1,43 +1,50 @@
+import { JsonObject } from "@cosmjs/cosmwasm-stargate";
 import XionConnect from "./xion-connect";
 
-class  XionQueries{
-    private query
-    constructor(){
-        this.query = new XionConnect()
-    }
-    //?  Gets an account's balance for a specific token 
-    //? address and token name
-    async  getBalance(address:string, denom:string = "uxion") {
-        const client = await this.query.getQueryClient();
-        const balance = await client.getBalance(address, denom);
-        return balance.amount;
-      }
-      //?  Gets detailed account information
-      async  getAccount(address:string) {
-        const client = await this.query.getQueryClient();
-        return await client.getAccount(address);
-      }
-      // Gets transaction details by hash
-      async getTransaction(hash:string) {
-        const client = await this.query.getQueryClient();
-        return await client.getTx(hash);
-      }
-      //Gets block data at a specific height
-      async  getBlock(height?:string) {
-        const client = await this.query.getQueryClient();
-        return  height ? await client.getBlock() : await client.getBlock(height);
-      }
-      // ueries a smart contract
-      async  queryContract(contractAddress:string, queryMsg:{}) {
-        const client = await this.query.getQueryClient();
-        return await client.queryContractSmart(contractAddress, queryMsg);
-      }
-      // {number} The current block height
-     async  getChainHeight() {
-       const client = await this.query.getQueryClient();
-       return await client.getHeight();
-     }
+class XionQueries {
+    private readonly xionConnect: XionConnect;
 
+    constructor() {
+        this.xionConnect = new XionConnect();
+    }
+    static xionToUxion(amount: number | string): string {
+        return Math.floor(Number(amount) * 1e6).toString();
+      }
+      
+      static uxionToXion(amount: number | string): string {
+        return (Number(amount) / 1e6).toString();
+      }
+    async getBalance(address: string, denom: string = "uxion"): Promise<string> {
+        const client = await this.xionConnect.getQueryClient();
+        const balance = await client.getBalance(address, denom);
+        return XionQueries.uxionToXion(balance.amount);
+    }
+
+    async getAccount(address: string) {
+        const client = await this.xionConnect.getQueryClient();
+        return client.getAccount(address);
+    }
+
+    async getTransaction(hash: string) {
+        const client = await this.xionConnect.getQueryClient();
+        return client.getTx(hash);
+    }
+
+    async getBlock(height?: number) {
+        const client = await this.xionConnect.getQueryClient();
+        return height ? client.getBlock(height) : client.getBlock();
+    }
+
+    async queryContract<T>(contractAddress: string, queryMsg: Record<string, unknown>): Promise<T> {
+        const client = await this.xionConnect.getQueryCosmWasmClient();
+        return client.queryContractSmart(contractAddress, queryMsg);
+    }
+    
+
+    async getChainHeight(): Promise<number> {
+        const client = await this.xionConnect.getQueryClient();
+        return client.getHeight();
+    }
 }
 
 export default XionQueries

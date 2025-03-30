@@ -2,9 +2,6 @@ import { IProduct } from "../types/IProduct";
 import { IUser } from "../types/IUser";
 
 export const formatProductResponse = (product: IProduct, seller: IUser, quantity: number) => {
-  console.log(product)
-  console.log(seller)
-  console.log(quantity)
   return {
     productId: product._id,
     quantity,

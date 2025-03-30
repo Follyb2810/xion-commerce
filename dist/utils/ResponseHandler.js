@@ -38,7 +38,9 @@ exports.AppError = {
     TRANSACTION_HASH_REQUIRED: "Transaction is require",
     PURCHASE_FAILED: "Failed to complete payment",
     INVALID_FILE: "Invalid document file or image",
-    PRODUCT_DEL: "Cannot delete product with remaining stock"
+    PRODUCT_DEL: "Cannot delete product with remaining stock",
+    XION_BALANCE: "Error fetching balance",
+    ERROR_XION: "Error ",
 };
 function ErrorHandler(res, errorKey, statusCode) {
     const errorMessage = exports.AppError[errorKey] || "An unexpected error occurred";

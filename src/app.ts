@@ -11,6 +11,7 @@ import walletRoute from "./routes/walletRoutes";
 import productRoute from "./routes/productRoutes";
 import orderRoute from "./routes/orderRoutes";
 import cartRoute from "./routes/cartRoutes";
+import xionRoute from "./routes/xionRoutes";
 import categoryRoute from "./routes/categoryRoutes";
 import cron from "node-cron";
 import rateLimit from 'express-rate-limit'
@@ -18,7 +19,6 @@ import path from "path";
 import http from "http";
 import { Server, Socket } from "socket.io";
 import { allowedOrigins } from "./config/allowedOrigins";
-import XionWallet from "./utils/wallet/xion_wallet";
 
 interface IUserSocket extends Socket {
   data: {
@@ -89,28 +89,6 @@ app.get("/ping", (req: Request, res: Response, next: NextFunction) => {
   res.send("Ping the ser");
 });
 
-// cron.schedule('0 */12 * * * *', () => {
-//   fetch('https://cosmos-ecommerce.onrender.com/ping')
-//     .then((res) => res.text())
-//     .then((text) => console.log(text,'12 minutes'))
-//     .catch((err) => console.error('Error fetching ping:', err));
-// })
-// const xag = XionWallet.generateXionWallet().then((a)=>{
-//   const x = XionWallet.getAddressFromXionMnemonic(a.mnemonic)
-//   console.log(x)
-  
-// })
-let e = 'win include air antenna lawn curtain move model artist destroy runway hurt attitude april neck reform chapter edge replace enact claim romance convince another'
-const x = XionWallet.getAddressFromXionMnemonic(e)
-// const x =new XionWallet()
-// console.log(x.getMyXionAddress,'you')
-// console.log(x.getMyXionAddress(),'why')
-
-// const x = XionWallet.generateNewWallet()
-// const x = XionWallet.generateAddressFromEmail('follyb')
-// console.log(xag)
-console.log(x)
-console.log(crypto.randomBytes(32).toString("hex"));
 app.get("/cosmos", (req: Request, res: Response) => {
   res.send("cosmos commerce");
 });
@@ -124,6 +102,7 @@ app.use("/api/product", productRoute);
 app.use("/api/cart", cartRoute);
 app.use("/api/order", orderRoute);
 app.use("/api/category", categoryRoute);
+app.use("/api/xion", xionRoute);
 
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error("Global Error Handler:", err);
@@ -134,6 +113,8 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
+//?
+//?
 // io.use((socket, next) => {
 //   const apiKey = socket.handshake.headers['cyber-api-key']?.toLowerCase();
 //   if (apiKey === Apikey) {

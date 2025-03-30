@@ -57,38 +57,26 @@ exports.addToCart = (0, express_async_handler_1.default)((req, res) => __awaiter
 }));
 exports.getCart = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userId = req._id;
-    console.log(userId);
     const cart = yield CartRepository_1.default.findByEntity({ user: userId }, undefined, "items.product");
-    // if (!cart || cart.items.length === 0) {
-    //   return ErrorHandler(res, "NOT_FOUND", 404);
-    // }
     (0, ResponseHandler_1.ResponseHandler)(res, 200, "User Cart", cart);
 }));
 exports.removeCart = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userId = req._id;
     const { productId, quantity = 1 } = req.body;
-    console.log(userId);
-    console.log(productId);
-    console.log(quantity);
     if (!mongoose_1.Types.ObjectId.isValid(productId)) {
         return (0, ResponseHandler_1.ErrorHandler)(res, "FIELD_ERROR", 400);
     }
     const cart = yield CartRepository_1.default.findByEntity({ user: new mongoose_1.Types.ObjectId(userId) });
-    console.log(cart);
-    console.log(1);
     if (!cart) {
         return (0, ResponseHandler_1.ErrorHandler)(res, "NOT_FOUND", 404);
     }
-    console.log(2);
     if (String(req._id) !== String(cart.user._id)) {
         return (0, ResponseHandler_1.ErrorHandler)(res, "UNAUTHORIZED", 403);
     }
-    console.log(3);
     const itemIndex = cart.items.findIndex((item) => item.product.toString() === productId);
     if (itemIndex === -1) {
         return (0, ResponseHandler_1.ErrorHandler)(res, "NOT_FOUND", 404);
     }
-    console.log(4);
     quantity >= cart.items[itemIndex].quantity
         ? cart.items.splice(itemIndex, 1)
         : (cart.items[itemIndex].quantity -= quantity);

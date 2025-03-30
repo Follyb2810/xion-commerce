@@ -14,6 +14,7 @@ const userSchema: Schema<IUser> = new Schema<IUser>(
         avatar: { type: String, default: null },
       },
       walletAddress: { type: String, unique: true, sparse: true, required: false, default: null },
+      mnemonic: { type: String, unique: true, sparse: true, required: false, default: null },
       refreshToken: { type: String, default: null },
       history: [{
         paid: { type: Number, default: 0 },

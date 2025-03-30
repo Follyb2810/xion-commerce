@@ -23,6 +23,7 @@ export interface IUser extends mongoose.Document {
     };
     refreshToken?: string;
     walletAddress?: string| null;
+    mnemonic?: string| null;
     isVerified?: boolean;
     createdAt: Date;
     updatedAt: Date;

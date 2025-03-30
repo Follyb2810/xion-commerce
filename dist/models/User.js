@@ -47,6 +47,7 @@ const userSchema = new mongoose_1.Schema({
         avatar: { type: String, default: null },
     },
     walletAddress: { type: String, unique: true, sparse: true, required: false, default: null },
+    mnemonic: { type: String, unique: true, sparse: true, required: false, default: null },
     refreshToken: { type: String, default: null },
     history: [{
             paid: { type: Number, default: 0 },

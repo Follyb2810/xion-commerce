@@ -42,23 +42,19 @@ export const authWallet = AsyncHandler(async (req: Request, res: Response): Prom
     });
     const result = UserResponse(user);
     ResponseHandler(res,200,'User Successfull login or Register',{ accessToken, result })
-    // return;
-    // res.status(200).json({ accessToken, result });
+    
 });
 
 export const updateProfile = AsyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
     const { walletAddress, email, name, username, bio, avatar } = req.body;
     const userId = req._id; 
-    console.log(userId)
+    
 
     if (!userId) {
         res.status(401).json({ message: "Unauthorized" });
         return;
     }
-    // if (!MongodbValidate.validateCosmosAddress(walletAddress)) {
-    //     res.status(400).json({ message: "Invalide cosmos wallet address" });
-    //     return;
-    // }
+    
     const user = await userRepository.findById(userId);
     if (!user) {
         res.status(404).json({ message: "User not found" });

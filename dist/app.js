@@ -6,7 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
-const crypto_1 = __importDefault(require("crypto"));
 const db_1 = require("./config/db");
 const cors_1 = __importDefault(require("cors"));
 const morgan_1 = __importDefault(require("morgan"));
@@ -16,6 +15,7 @@ const walletRoutes_1 = __importDefault(require("./routes/walletRoutes"));
 const productRoutes_1 = __importDefault(require("./routes/productRoutes"));
 const orderRoutes_1 = __importDefault(require("./routes/orderRoutes"));
 const cartRoutes_1 = __importDefault(require("./routes/cartRoutes"));
+const xionRoutes_1 = __importDefault(require("./routes/xionRoutes"));
 const categoryRoutes_1 = __importDefault(require("./routes/categoryRoutes"));
 const path_1 = __importDefault(require("path"));
 const http_1 = __importDefault(require("http"));
@@ -77,13 +77,6 @@ app.get("/ping", (req, res, next) => {
     console.log(`Server pinging ${new Date().toISOString()}`);
     res.send("Ping the ser");
 });
-// cron.schedule('0 */12 * * * *', () => {
-//   fetch('https://cosmos-ecommerce.onrender.com/ping')
-//     .then((res) => res.text())
-//     .then((text) => console.log(text,'12 minutes'))
-//     .catch((err) => console.error('Error fetching ping:', err));
-// })
-console.log(crypto_1.default.randomBytes(32).toString("hex"));
 app.get("/cosmos", (req, res) => {
     res.send("cosmos commerce");
 });
@@ -96,6 +89,7 @@ app.use("/api/product", productRoutes_1.default);
 app.use("/api/cart", cartRoutes_1.default);
 app.use("/api/order", orderRoutes_1.default);
 app.use("/api/category", categoryRoutes_1.default);
+app.use("/api/xion", xionRoutes_1.default);
 app.use((err, req, res, next) => {
     console.error("Global Error Handler:", err);
     res.status(500).json({
@@ -103,6 +97,8 @@ app.use((err, req, res, next) => {
         message: err.message || "An unexpected error occurred",
     });
 });
+//?
+//?
 // io.use((socket, next) => {
 //   const apiKey = socket.handshake.headers['cyber-api-key']?.toLowerCase();
 //   if (apiKey === Apikey) {

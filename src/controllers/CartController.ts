@@ -52,12 +52,8 @@ export const addToCart = AsyncHandler(async (req: AuthRequest, res: Response): P
 
 export const getCart = AsyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
   const userId = req._id;
-  console.log(userId)
   const cart = await CartRepository.findByEntity({ user: userId }, undefined, "items.product");
 
-  // if (!cart || cart.items.length === 0) {
-  //   return ErrorHandler(res, "NOT_FOUND", 404);
-  // }
 
   ResponseHandler(res, 200, "User Cart", cart);
 });
@@ -65,33 +61,29 @@ export const getCart = AsyncHandler(async (req: AuthRequest, res: Response): Pro
 export const removeCart = AsyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
   const userId = req._id;
   const { productId, quantity = 1 } = req.body;
-  console.log(userId)
-  console.log(productId)
-  console.log(quantity)
+  
   if (!Types.ObjectId.isValid(productId)) {
     return ErrorHandler(res, "FIELD_ERROR", 400);
   }
   
   const cart = await CartRepository.findByEntity({ user: new Types.ObjectId(userId) });
-  console.log(cart)
-  console.log(1)
+  
   
   if (!cart) {
     return ErrorHandler(res, "NOT_FOUND", 404);
   }
-  console.log(2)
   
   if (String(req._id) !== String(cart.user._id)) {
     return ErrorHandler(res, "UNAUTHORIZED", 403);
   }
-  console.log(3)
+
   
   const itemIndex = cart.items.findIndex((item) => item.product.toString() === productId);
   
   if (itemIndex === -1) {
     return ErrorHandler(res, "NOT_FOUND", 404);
   }
-  console.log(4)
+
 
   quantity >= cart.items[itemIndex].quantity
     ? cart.items.splice(itemIndex, 1)

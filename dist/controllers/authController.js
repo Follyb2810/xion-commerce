@@ -22,6 +22,7 @@ const jwt_1 = __importDefault(require("../utils/jwt"));
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const IAuthResponse_1 = require("../types/IAuthResponse");
 const ResponseHandler_1 = require("../utils/ResponseHandler");
+const xion_wallet_1 = __importDefault(require("./../utils/wallet/xion_wallet"));
 const authRepository = new repository_1.default(User_1.default);
 exports.register = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
@@ -33,11 +34,17 @@ exports.register = (0, express_async_handler_1.default)((req, res) => __awaiter(
         return (0, ResponseHandler_1.ErrorHandler)(res, "USER_EXIST", 400);
     }
     const hashedPassword = yield (0, bcrypt_1.hashPwd)(password);
+    const userWallet = yield xion_wallet_1.default.generateAddressFromEmail(email);
     const newUser = yield authRepository.create({
         email,
         password: hashedPassword,
+        walletAddress: userWallet.address,
+        mnemonic: userWallet.mnemonic
     });
     newUser.refreshToken = crypto_1.default.randomBytes(40).toString("hex");
+    if (!newUser.role.includes(IUser_1.Roles.SELLER)) {
+        newUser.role.push(IUser_1.Roles.SELLER);
+    }
     yield newUser.save();
     const accessToken = jwt_1.default.signToken({ id: newUser._id, roles: newUser.role });
     return (0, ResponseHandler_1.ResponseHandler)(res, 201, "User registered successfully", { accessToken, user: (0, IAuthResponse_1.UserResponse)(newUser) });

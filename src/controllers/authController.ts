@@ -8,8 +8,8 @@ import JwtService from "../utils/jwt";
 import AsyncHandler from "express-async-handler";
 import { UserResponse } from "../types/IAuthResponse";
 import { AuthRequest } from "../middleware/auth";
-import mongoose from "mongoose";
 import { ErrorHandler, ResponseHandler } from "../utils/ResponseHandler";
+import XionWallet from "./../utils/wallet/xion_wallet";
 
 const authRepository = new Repository(User);
 
@@ -25,12 +25,18 @@ export const register = AsyncHandler(async (req: Request, res: Response): Promis
     }
 
     const hashedPassword = await hashPwd(password);
+    const userWallet =await XionWallet.generateAddressFromEmail(email)
     const newUser = await authRepository.create({
         email,
         password: hashedPassword,
+        walletAddress: userWallet.address,
+        mnemonic: userWallet.mnemonic
     } as Partial<IUser>);
 
     newUser.refreshToken = crypto.randomBytes(40).toString("hex");
+    if(!newUser.role.includes(Roles.SELLER)){
+        newUser.role.push(Roles.SELLER)
+    }
     await newUser.save();
 
     const accessToken = JwtService.signToken({ id: newUser._id, roles: newUser.role });
