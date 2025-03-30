@@ -106,22 +106,22 @@ exports.confirmDirectPurchase = (0, express_async_handler_1.default)((req, res) 
     const userId = req._id;
     const { productId, quantity = 1, transactionHash } = req.body;
     if (!mongoose_1.Types.ObjectId.isValid(productId)) {
+        console.error('INVALID_PRODUCT_ID', 'confirmDirectPurchase transactionHash');
         return (0, ResponseHandler_1.ErrorHandler)(res, "INVALID_PRODUCT_ID", 400);
     }
-    console.log('INVALID_PRODUCT_ID', 'confirmDirectPurchase transactionHash');
     if (!transactionHash) {
+        console.error('TRANSACTION_HASH_REQUIRED', 'confirmDirectPurchase transactionHash');
         return (0, ResponseHandler_1.ErrorHandler)(res, "TRANSACTION_HASH_REQUIRED", 400);
     }
-    console.log('TRANSACTION_HASH_REQUIRED', 'confirmDirectPurchase transactionHash');
     const product = yield ProductRepository_1.default.findById(productId);
     if (!product) {
         return (0, ResponseHandler_1.ErrorHandler)(res, "PRODUCT_NOT_FOUND", 404);
     }
-    console.log(product, 'confirmDirectPurchase product');
+    // console.error(product,'confirmDirectPurchase product')
     if (product.stock < quantity) {
+        console.error(`${product.stock} - ${quantity}`, 'confirmDirectPurchase product');
         return (0, ResponseHandler_1.ErrorHandler)(res, "INSUFFICIENT_STOCK", 400);
     }
-    console.log(`${product.stock} - ${quantity}`, 'confirmDirectPurchase product');
     const totalAmount = product.price * quantity;
     try {
         const order = yield OrderRepository_1.default.create({

@@ -129,25 +129,25 @@ export const confirmDirectPurchase = AsyncHandler(async (req: AuthRequest, res: 
   const { productId, quantity = 1, transactionHash } = req.body;
 
 if (!Types.ObjectId.isValid(productId)) {
+  console.error('INVALID_PRODUCT_ID','confirmDirectPurchase transactionHash')
   return ErrorHandler(res, "INVALID_PRODUCT_ID", 400);
 }
-console.log('INVALID_PRODUCT_ID','confirmDirectPurchase transactionHash')
 
 if (!transactionHash) {
+  console.error('TRANSACTION_HASH_REQUIRED','confirmDirectPurchase transactionHash')
   return ErrorHandler(res, "TRANSACTION_HASH_REQUIRED", 400);
 }
-console.log('TRANSACTION_HASH_REQUIRED','confirmDirectPurchase transactionHash')
 
 const product = await ProductRepository.findById(productId);
 if (!product) {
   return ErrorHandler(res, "PRODUCT_NOT_FOUND", 404);
 }
-console.log(product,'confirmDirectPurchase product')
+// console.error(product,'confirmDirectPurchase product')
 
 if (product.stock < quantity) {
+  console.error(`${product.stock } - ${quantity}`,'confirmDirectPurchase product')
   return ErrorHandler(res, "INSUFFICIENT_STOCK", 400);
 }
-console.log(`${product.stock } - ${quantity}`,'confirmDirectPurchase product')
 
 const totalAmount = product.price * quantity;
 

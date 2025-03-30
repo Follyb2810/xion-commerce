@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.releaseOrCancelEscrow = exports.sendXionToEscrowContract = exports.sendXionToContract = exports.getAddressBalance = void 0;
+exports.releaseOrCancelEscrow = exports.sendXionToEscrowContract = exports.sendXionTokenUser = exports.getAddressBalance = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const xion_queries_1 = __importDefault(require("../utils/wallet/xion_queries"));
 const ResponseHandler_1 = require("../utils/ResponseHandler");
@@ -33,13 +33,14 @@ exports.getAddressBalance = (0, express_async_handler_1.default)((req, res) => _
         return (0, ResponseHandler_1.ErrorHandler)(res, "ERROR_XION", 400);
     }
 }));
-exports.sendXionToContract = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.sendXionTokenUser = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { recipientAddress, amount } = req.body;
     if (!recipientAddress || !amount) {
         return (0, ResponseHandler_1.ResponseHandler)(res, 400, "Recipient address and amount are required");
     }
     try {
         const payment = yield Transaction.sendTokens(recipientAddress, amount);
+        console.error({ payment });
         return (0, ResponseHandler_1.ResponseHandler)(res, 200, "Funds sent successfully", payment);
     }
     catch (error) {
@@ -47,15 +48,21 @@ exports.sendXionToContract = (0, express_async_handler_1.default)((req, res) => 
     }
 }));
 exports.sendXionToEscrowContract = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
     const { sellerAddress, amount } = req.body;
+    const maxRetries = 3;
     if (!sellerAddress || !amount) {
         return (0, ResponseHandler_1.ResponseHandler)(res, 400, "Contract address and amount are required");
     }
-    if (!amount || Number(amount) <= 0) {
-        throw new Error("Invalid amount: must be greater than zero.");
+    if (Number(amount) <= 0) {
+        return (0, ResponseHandler_1.ResponseHandler)(res, 400, "Invalid amount: must be greater than zero.");
     }
     const formattedAmount = xion_queries_1.default.xionToUxion(amount);
     const user = yield UserRepository_1.default.findById(req._id);
+    if (!(user === null || user === void 0 ? void 0 : user.walletAddress) || !(user === null || user === void 0 ? void 0 : user.mnemonic)) {
+        console.error("User wallet address or mnemonic is missing.");
+        return (0, ResponseHandler_1.ResponseHandler)(res, 400, "Invalid user credentials");
+    }
     const msg = {
         initiate_escrow: {
             seller: sellerAddress,
@@ -63,16 +70,36 @@ exports.sendXionToEscrowContract = (0, express_async_handler_1.default)((req, re
         },
     };
     const funds = [{ denom: "uxion", amount: formattedAmount }];
-    const transaction = yield Transaction.executeContract(user === null || user === void 0 ? void 0 : user.walletAddress, msg, funds, user === null || user === void 0 ? void 0 : user.mnemonic);
-    const formattedTransaction = {
-        transactionHash: transaction === null || transaction === void 0 ? void 0 : transaction.transactionHash,
-        gasUsed: transaction === null || transaction === void 0 ? void 0 : transaction.gasUsed.toString(),
-        gasWanted: transaction === null || transaction === void 0 ? void 0 : transaction.gasWanted.toString(),
-    };
-    return (0, ResponseHandler_1.ResponseHandler)(res, 200, "Funds sent to escrow contract", formattedTransaction);
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            const transaction = yield Transaction.executeContract(user.walletAddress, msg, funds, user.mnemonic);
+            if (!(transaction === null || transaction === void 0 ? void 0 : transaction.transactionHash)) {
+                throw new Error("Transaction failed: No transaction hash returned.");
+            }
+            const formattedTransaction = {
+                transactionHash: transaction.transactionHash,
+                gasUsed: ((_a = transaction.gasUsed) === null || _a === void 0 ? void 0 : _a.toString()) || "N/A",
+                gasWanted: ((_b = transaction.gasWanted) === null || _b === void 0 ? void 0 : _b.toString()) || "N/A",
+            };
+            console.log("Transaction successful:", formattedTransaction);
+            return (0, ResponseHandler_1.ResponseHandler)(res, 200, "Funds sent to escrow contract", formattedTransaction);
+        }
+        catch (error) {
+            console.error(`Attempt ${attempt} failed:`, error.message);
+            if (error.message.includes("insufficient funds")) {
+                return (0, ResponseHandler_1.ResponseHandler)(res, 400, "Insufficient funds for the transaction.");
+            }
+            if (attempt === maxRetries) {
+                return (0, ResponseHandler_1.ResponseHandler)(res, 500, "Transaction failed after multiple attempts.");
+            }
+            yield new Promise((resolve) => setTimeout(resolve, 2000));
+        }
+    }
 }));
 exports.releaseOrCancelEscrow = (0, express_async_handler_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
     const { buyerAddress, status } = req.body;
+    const maxRetries = 3;
     if (!buyerAddress || !status) {
         return (0, ResponseHandler_1.ResponseHandler)(res, 400, "Buyer address and fund status are required.");
     }
@@ -87,19 +114,27 @@ exports.releaseOrCancelEscrow = (0, express_async_handler_1.default)((req, res, 
     const msg = status.toLowerCase() === "release"
         ? { release_funds: {} }
         : { cancel_escrow: {} };
-    try {
-        const transaction = yield Transaction.executeContract(buyerAddress, msg, [], user.mnemonic);
-        if (!transaction) {
-            return (0, ResponseHandler_1.ResponseHandler)(res, 500, "Transaction failed.");
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            console.log(`Attempt ${attempt}: Executing escrow transaction...`);
+            const transaction = yield Transaction.executeContract(buyerAddress, msg, [], user.mnemonic);
+            if (!(transaction === null || transaction === void 0 ? void 0 : transaction.transactionHash)) {
+                throw new Error("Transaction failed: No transaction hash returned.");
+            }
+            req.transactionData = {
+                transactionHash: transaction.transactionHash,
+                gasUsed: ((_a = transaction.gasUsed) === null || _a === void 0 ? void 0 : _a.toString()) || "N/A",
+                gasWanted: ((_b = transaction.gasWanted) === null || _b === void 0 ? void 0 : _b.toString()) || "N/A",
+            };
+            console.log("Transaction successful:", req.transactionData);
+            return next();
         }
-        req.transactionData = {
-            transactionHash: transaction.transactionHash,
-            gasUsed: transaction.gasUsed.toString(),
-            gasWanted: transaction.gasWanted.toString(),
-        };
-        next();
-    }
-    catch (error) {
-        return (0, ResponseHandler_1.ResponseHandler)(res, 500, "Escrow transaction failed.", error);
+        catch (error) {
+            console.error(`Attempt ${attempt} failed:`, error.message);
+            if (attempt === maxRetries) {
+                return (0, ResponseHandler_1.ResponseHandler)(res, 500, "Escrow transaction failed after multiple attempts.", error);
+            }
+            yield new Promise((resolve) => setTimeout(resolve, 2000));
+        }
     }
 }));

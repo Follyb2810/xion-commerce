@@ -35,7 +35,7 @@ exports.AppError = {
     EMPTY_CART: "Your cart is empty",
     MAP_LOCATION: "Mapping location is required",
     INVALID_MAP_LOCATION: "Invalid mapping location",
-    TRANSACTION_HASH_REQUIRED: "Transaction is require",
+    TRANSACTION_HASH_REQUIRED: "Transaction Hash is require",
     PURCHASE_FAILED: "Failed to complete payment",
     INVALID_FILE: "Invalid document file or image",
     PRODUCT_DEL: "Cannot delete product with remaining stock",
