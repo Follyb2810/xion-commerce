@@ -106,7 +106,6 @@ app.use((err, req, res, next) => {
 //   }
 //   return next(new Error('Invalid API key'));
 // });
-// Start the server and configure Socket.IO
 io.on("connection", (socket) => {
     console.log("A user connected:", socket.id);
     socket.data.username = "New User";
