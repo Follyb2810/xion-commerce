@@ -10,8 +10,8 @@ router.get('/', auth, getDirectPurchaseHistory)
 router.get('/user_order',auth,getUserOrder)
 router.get('/all',auth,allOrder)
 router.get('/all_user_order',auth,getUserPurchaseHistory)
-router.put( "/escrow/:orderId", auth,releaseOrCancelEscrow, updateOrderStatus);
-// router.put('/:orderId/status', auth,releaseOrCancelEscrow, updateOrderStatus);
+router.put('/:orderId/status', auth, updateOrderStatus);
+// router.put( "/escrow/:orderId", auth,releaseOrCancelEscrow, updateOrderStatus);
 router.post('/available',auth,CheckStock,checkProductAvailability)
 router.post('/confirm',auth,confirmDirectPurchase)
 /**

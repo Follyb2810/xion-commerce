@@ -21,67 +21,67 @@ export const allOrder = AsyncHandler(async (req: Request, res: Response): Promis
   const all = await OrderRepository.getAll()
   res.json(all)
 })
-export const updateOrderStatus = AsyncHandler(async (req: XionRequest, res: Response) => {
-  const { orderId } = req.params;
-  let { status } = req.body;
-
-  if (!orderId || !status) {
-      return ResponseHandler(res, 400, "Order ID and status are required.");
-  }
-
-  status = status.toLowerCase();
-
-  const validStatuses = Object.values(OrderStatus).map(s => s.toLowerCase());
-  if (!validStatuses.includes(status)) {
-    return ResponseHandler(res, 400, "Invalid status.");
-  }
-  
-  const order = await OrderRepository.findById(orderId);
-  if (!order) {
-    return ResponseHandler(res, 404, "Order not found.");
-  }
-  
-  if (status === OrderStatus.CANCELED) {
-    for (const item of order.items) {
-      await ProductRepository.updateById(item.product.toString(), { $inc: { stock: item.quantity } });
-    }
-  }
-  
-  const updatedOrder = await OrderRepository.updateById(orderId, { status });
-  
-  const responsePayload = {
-    updatedOrder,
-    escrowTransaction: req.transactionData, 
-  };
-
-    ResponseHandler(res, 200, "Order status updated",responsePayload);
-});
-
-// export const updateOrderStatus = AsyncHandler(async (req: Request, res: Response): Promise<void> => {
+// export const updateOrderStatus = AsyncHandler(async (req: XionRequest, res: Response) => {
 //   const { orderId } = req.params;
 //   let { status } = req.body;
 
-//   status = status.toLowerCase(); 
+//   if (!orderId || !status) {
+//       return ResponseHandler(res, 400, "Order ID and status are required.");
+//   }
+
+//   status = status.toLowerCase();
 
 //   const validStatuses = Object.values(OrderStatus).map(s => s.toLowerCase());
 //   if (!validStatuses.includes(status)) {
-//     return ErrorHandler(res, "INVALID_STATUS", 400);
+//     return ResponseHandler(res, 400, "Invalid status.");
 //   }
-
+  
 //   const order = await OrderRepository.findById(orderId);
 //   if (!order) {
-//     return ErrorHandler(res, "ORDER_NOT_FOUND", 404);
+//     return ResponseHandler(res, 404, "Order not found.");
 //   }
-
+  
 //   if (status === OrderStatus.CANCELED) {
 //     for (const item of order.items) {
 //       await ProductRepository.updateById(item.product.toString(), { $inc: { stock: item.quantity } });
 //     }
 //   }
-
+  
 //   const updatedOrder = await OrderRepository.updateById(orderId, { status });
-//   ResponseHandler(res, 200, "Order status updated", updatedOrder);
+  
+//   const responsePayload = {
+//     updatedOrder,
+//     escrowTransaction: req.transactionData, 
+//   };
+
+//     ResponseHandler(res, 200, "Order status updated",responsePayload);
 // });
+
+export const updateOrderStatus = AsyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { orderId } = req.params;
+  let { status } = req.body;
+
+  status = status.toLowerCase(); 
+
+  const validStatuses = Object.values(OrderStatus).map(s => s.toLowerCase());
+  if (!validStatuses.includes(status)) {
+    return ErrorHandler(res, "INVALID_STATUS", 400);
+  }
+
+  const order = await OrderRepository.findById(orderId);
+  if (!order) {
+    return ErrorHandler(res, "ORDER_NOT_FOUND", 404);
+  }
+
+  if (status === OrderStatus.CANCELED) {
+    for (const item of order.items) {
+      await ProductRepository.updateById(item.product.toString(), { $inc: { stock: item.quantity } });
+    }
+  }
+
+  const updatedOrder = await OrderRepository.updateById(orderId, { status });
+  ResponseHandler(res, 200, "Order status updated", updatedOrder);
+});
  //! 
   export const getDirectPurchaseHistory = AsyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
     const userId = req._id;
