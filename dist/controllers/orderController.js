@@ -27,44 +27,20 @@ exports.allOrder = (0, express_async_handler_1.default)((req, res) => __awaiter(
     const all = yield OrderRepository_1.default.getAll();
     res.json(all);
 }));
-exports.updateOrderStatus = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { orderId } = req.params;
-    let { status } = req.body;
-    if (!orderId || !status) {
-        return (0, ResponseHandler_1.ResponseHandler)(res, 400, "Order ID and status are required.");
-    }
-    status = status.toLowerCase();
-    const validStatuses = Object.values(IOrder_1.OrderStatus).map(s => s.toLowerCase());
-    if (!validStatuses.includes(status)) {
-        return (0, ResponseHandler_1.ResponseHandler)(res, 400, "Invalid status.");
-    }
-    const order = yield OrderRepository_1.default.findById(orderId);
-    if (!order) {
-        return (0, ResponseHandler_1.ResponseHandler)(res, 404, "Order not found.");
-    }
-    if (status === IOrder_1.OrderStatus.CANCELED) {
-        for (const item of order.items) {
-            yield ProductRepository_1.default.updateById(item.product.toString(), { $inc: { stock: item.quantity } });
-        }
-    }
-    const updatedOrder = yield OrderRepository_1.default.updateById(orderId, { status });
-    const responsePayload = {
-        updatedOrder,
-        escrowTransaction: req.transactionData,
-    };
-    (0, ResponseHandler_1.ResponseHandler)(res, 200, "Order status updated", responsePayload);
-}));
-// export const updateOrderStatus = AsyncHandler(async (req: Request, res: Response): Promise<void> => {
+// export const updateOrderStatus = AsyncHandler(async (req: XionRequest, res: Response) => {
 //   const { orderId } = req.params;
 //   let { status } = req.body;
-//   status = status.toLowerCase(); 
+//   if (!orderId || !status) {
+//       return ResponseHandler(res, 400, "Order ID and status are required.");
+//   }
+//   status = status.toLowerCase();
 //   const validStatuses = Object.values(OrderStatus).map(s => s.toLowerCase());
 //   if (!validStatuses.includes(status)) {
-//     return ErrorHandler(res, "INVALID_STATUS", 400);
+//     return ResponseHandler(res, 400, "Invalid status.");
 //   }
 //   const order = await OrderRepository.findById(orderId);
 //   if (!order) {
-//     return ErrorHandler(res, "ORDER_NOT_FOUND", 404);
+//     return ResponseHandler(res, 404, "Order not found.");
 //   }
 //   if (status === OrderStatus.CANCELED) {
 //     for (const item of order.items) {
@@ -72,8 +48,32 @@ exports.updateOrderStatus = (0, express_async_handler_1.default)((req, res) => _
 //     }
 //   }
 //   const updatedOrder = await OrderRepository.updateById(orderId, { status });
-//   ResponseHandler(res, 200, "Order status updated", updatedOrder);
+//   const responsePayload = {
+//     updatedOrder,
+//     escrowTransaction: req.transactionData, 
+//   };
+//     ResponseHandler(res, 200, "Order status updated",responsePayload);
 // });
+exports.updateOrderStatus = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { orderId } = req.params;
+    let { status } = req.body;
+    status = status.toLowerCase();
+    const validStatuses = Object.values(IOrder_1.OrderStatus).map(s => s.toLowerCase());
+    if (!validStatuses.includes(status)) {
+        return (0, ResponseHandler_1.ErrorHandler)(res, "INVALID_STATUS", 400);
+    }
+    const order = yield OrderRepository_1.default.findById(orderId);
+    if (!order) {
+        return (0, ResponseHandler_1.ErrorHandler)(res, "ORDER_NOT_FOUND", 404);
+    }
+    if (status === IOrder_1.OrderStatus.CANCELED) {
+        for (const item of order.items) {
+            yield ProductRepository_1.default.updateById(item.product.toString(), { $inc: { stock: item.quantity } });
+        }
+    }
+    const updatedOrder = yield OrderRepository_1.default.updateById(orderId, { status });
+    (0, ResponseHandler_1.ResponseHandler)(res, 200, "Order status updated", updatedOrder);
+}));
 //! 
 exports.getDirectPurchaseHistory = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userId = req._id;
@@ -93,6 +93,7 @@ exports.getUserOrder = (0, express_async_handler_1.default)((req, res) => __awai
     if (String(orders.buyer) !== String(userId)) {
         return (0, ResponseHandler_1.ErrorHandler)(res, "UNAUTHORIZED", 403);
     }
+    console.log(orders);
     (0, ResponseHandler_1.ResponseHandler)(res, 200, "Purchase details retrieved", orders);
 }));
 //! 
@@ -198,5 +199,6 @@ exports.getUserPurchaseHistory = (0, express_async_handler_1.default)((req, res)
             select: "price image_of_land stock",
         },
     ]);
+    console.log(orders);
     (0, ResponseHandler_1.ResponseHandler)(res, 200, "User purchase history retrieved", orders);
 }));

@@ -106,6 +106,7 @@ app.use((err, req, res, next) => {
 //   }
 //   return next(new Error('Invalid API key'));
 // });
+const emailToSocketId = new Map();
 io.on("connection", (socket) => {
     console.log("A user connected:", socket.id);
     socket.data.username = "New User";
@@ -162,6 +163,11 @@ io.on("connection", (socket) => {
     io.emit("broadcast", { message: `${socket.id} joined the chat` });
     // Send a message to EVERYONE EXCEPT the sender
     socket.broadcast.emit("broadcast", { message: `User ${socket.id} joined` });
+    socket.on('room:join', (data) => {
+        console.log(data);
+        emailToSocketId.set(data, socket.id);
+        socket.to(socket.id).emit('room:join', data);
+    });
     socket.on("disconnect", () => {
         io.emit('disconnect', { system: 'chat disonneeted', message: `${socket.data.username} has lefthe chatt` });
         console.log("User disconnected:", socket.id);

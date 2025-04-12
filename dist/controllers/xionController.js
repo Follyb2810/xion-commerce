@@ -126,7 +126,7 @@ exports.releaseOrCancelEscrow = (0, express_async_handler_1.default)((req, res, 
                 gasUsed: ((_a = transaction.gasUsed) === null || _a === void 0 ? void 0 : _a.toString()) || "N/A",
                 gasWanted: ((_b = transaction.gasWanted) === null || _b === void 0 ? void 0 : _b.toString()) || "N/A",
             };
-            console.log("Transaction successful:", req.transactionData);
+            console.log(`Transaction ${status} successful:`, req.transactionData);
             return next();
         }
         catch (error) {

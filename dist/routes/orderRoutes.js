@@ -4,14 +4,13 @@ const express_1 = require("express");
 const auth_1 = require("../middleware/auth");
 const orderController_1 = require("../controllers/orderController");
 const CheckStock_1 = require("../middleware/CheckStock");
-const xionController_1 = require("../controllers/xionController");
 const router = (0, express_1.Router)();
 router.get('/', auth_1.auth, orderController_1.getDirectPurchaseHistory);
 router.get('/user_order', auth_1.auth, orderController_1.getUserOrder);
 router.get('/all', auth_1.auth, orderController_1.allOrder);
 router.get('/all_user_order', auth_1.auth, orderController_1.getUserPurchaseHistory);
-router.put("/escrow/:orderId", auth_1.auth, xionController_1.releaseOrCancelEscrow, orderController_1.updateOrderStatus);
-// router.put('/:orderId/status', auth,releaseOrCancelEscrow, updateOrderStatus);
+router.put('/:orderId/status', auth_1.auth, orderController_1.updateOrderStatus);
+// router.put( "/escrow/:orderId", auth,releaseOrCancelEscrow, updateOrderStatus);
 router.post('/available', auth_1.auth, CheckStock_1.CheckStock, orderController_1.checkProductAvailability);
 router.post('/confirm', auth_1.auth, orderController_1.confirmDirectPurchase);
 /**
