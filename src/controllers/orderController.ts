@@ -111,7 +111,7 @@ export const updateOrderStatus = AsyncHandler(async (req: Request, res: Response
       return ErrorHandler(res, "UNAUTHORIZED", 403);
     }
 
-  
+  console.log(orders)
     ResponseHandler(res, 200, "Purchase details retrieved", orders);
   });
   //! 
@@ -236,7 +236,7 @@ export const getUserPurchaseHistory = AsyncHandler(async (req: AuthRequest, res:
       },
     ]
   );
-
+console.log(orders)
   ResponseHandler(res, 200, "User purchase history retrieved", orders);
 });
 
