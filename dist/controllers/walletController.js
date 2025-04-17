@@ -21,6 +21,7 @@ const crypto_1 = __importDefault(require("crypto"));
 const IUser_1 = require("../types/IUser");
 const IAuthResponse_1 = require("../types/IAuthResponse");
 const ResponseHandler_1 = require("../utils/ResponseHandler");
+const xion_wallet_1 = __importDefault(require("../utils/wallet/xion_wallet"));
 const userRepository = new repository_1.default(User_1.default);
 exports.authWallet = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { walletAddress } = req.body;
@@ -34,7 +35,11 @@ exports.authWallet = (0, express_async_handler_1.default)((req, res) => __awaite
     // }
     let user = yield userRepository.findByEntity({ walletAddress });
     if (!user) {
-        user = yield userRepository.create({ walletAddress });
+        const userWallet = yield xion_wallet_1.default.generateNewWallet();
+        user = yield userRepository.create({ walletAddress,
+            // walletAddress: userWallet.address,
+            mnemonic: userWallet.mnemonic
+        });
         user.refreshToken = crypto_1.default.randomBytes(40).toString("hex");
         if (!user.role.includes(IUser_1.Roles.SELLER)) {
             user.role.push(IUser_1.Roles.SELLER);

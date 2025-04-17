@@ -135,6 +135,8 @@ Content-Type: image/png
 # GET {{baseUrl}}/comments/{{commentId}}/replies/{{getReplies.response.body.//reply[1]/@id}}
 
 ###
+POST   {{PORT}}/auth/wallet
+###
 GET  {{PORT}}/product
 ###
 GET  {{PORT}}/product/67cdbcf40914041dccf1f3e6

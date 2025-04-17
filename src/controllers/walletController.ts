@@ -9,6 +9,7 @@ import { Roles } from "../types/IUser";
 import { UserResponse } from "../types/IAuthResponse";
 import MongodbValidate from "../utils/MongodbValidate";
 import { ResponseHandler } from "../utils/ResponseHandler";
+import XionWallet from "../utils/wallet/xion_wallet";
 
 const userRepository = new Repository(User);
 
@@ -27,7 +28,12 @@ export const authWallet = AsyncHandler(async (req: Request, res: Response): Prom
     let user = await userRepository.findByEntity({ walletAddress });
 
     if (!user) {
-        user = await userRepository.create({ walletAddress });
+
+        const userWallet =await XionWallet.generateNewWallet()
+        user = await userRepository.create({ walletAddress,
+            // walletAddress: userWallet.address,
+            mnemonic: userWallet.mnemonic
+        });
         user.refreshToken = crypto.randomBytes(40).toString("hex");
         if (!user.role.includes(Roles.SELLER)) {
         user.role.push(Roles.SELLER);
