@@ -10,7 +10,18 @@ export const connectDb = async (): Promise<any> => {
   try {
     mongoose.set("strictQuery", true);
     const db = await mongoose.connect(process.env.MONGO_URI as string);
+    // const b = await User.collection.dropIndex('mnemonic_1');
+    // if(b){
+    //   console.log('success frop mnemonic_1 ')
+    // }
+    // const indexes = await User.collection.getIndexes();
+    // console.log(indexes);
+    console.log('users')
+    // const users = await User.collection.find().toArray(); 
+    // console.log(users);
     
+
+
     // try {
     //   await mongoose?.connection?.db?.dropCollection("users");
     //   console.log("Dropped users collection.");

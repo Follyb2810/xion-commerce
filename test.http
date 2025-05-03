@@ -21,7 +21,7 @@ Content-Type: {{Json}}
 
 //   "walletAddress":"cosmos1rs2tnhe4mxpjnedhc84pc0v7mcy5gtmga0a9n3"
 {
-  "walletAddress":"cosmos1rs2tnhe4mxpjnedhc84pc0v7mcy5gtmga0a9n1" 
+  "walletAddress":"cosmos1rs2tnhenbnnk4mxpjnedhc84pc0v7mcy5gtmga0a9n00" 
 }
 ### user profile
 GET {{PORT}}/profile/
@@ -135,7 +135,13 @@ Content-Type: image/png
 # GET {{baseUrl}}/comments/{{commentId}}/replies/{{getReplies.response.body.//reply[1]/@id}}
 
 ###
-POST   {{PORT}}/auth/wallet
+POST   {{PORT}}/wallet
+Content-Type: {{Json}}
+
+
+{
+	"walletAddress":"follyb28100000"
+}
 ###
 GET  {{PORT}}/product
 ###

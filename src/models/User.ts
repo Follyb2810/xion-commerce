@@ -1,5 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 import { IUser, Roles } from '../types/IUser';
+import { encryptKey } from '../utils/hash';
 
 const userSchema: Schema<IUser> = new Schema<IUser>(
     {
@@ -30,7 +31,12 @@ userSchema.pre<IUser>('save', function (next) {
     if (!this.username && this.email) {
         this.username = this.email;
     }
+    if (this.isModified('mnemonic') && this.mnemonic && this._id) {
+      this.mnemonic = encryptKey(this.mnemonic, this._id.toString());
+  }
     next();
 });
 
+
 export default mongoose.models.User || mongoose.model<IUser>('User', userSchema);
+// mnemonic: { type: String, unique: true, index: { name: 'mnemonic_unique_index' }, sparse: true }

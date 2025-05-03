@@ -112,6 +112,30 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     message: err.message || "An unexpected error occurred",
   });
 });
+// app.use((req, res, next) => {
+//   req.io = io;
+//   next();
+// });
+// global.io = new Server(httpServer);
+// socket.js
+// const { Server } = require("socket.io");
+
+// let io;
+// module.exports = {
+//   init: (server) => {
+//     io = new Server(server);
+//     return io;
+//   },
+//   getIO: () => {
+//     if (!io) throw new Error("Socket.io not initialized!");
+//     return io;
+//   }
+// };
+// const io = require('./socket').getIO();
+// io.emit('event', payload);
+
+
+
 
 //?
 //?
@@ -122,6 +146,8 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 //   }
 //   return next(new Error('Invalid API key'));
 // });
+
+
 const emailToSocketId = new Map()
 io.on("connection", (socket: IUserSocket) => {
   console.log("A user connected:", socket.id);
@@ -212,3 +238,36 @@ connectDb()
   .catch((error) => {
     console.log("Invalid database connection: ", error);
   });
+  
+  
+  /**
+  client
+  const socket = io("http://localhost:3000", {
+  auth: {
+    token: "user-auth-token",
+    userId: "1234"
+  }
+});
+server
+io.on("connection", (socket) => {
+  const { token, userId } = socket.handshake.auth; // OR use .query if using query params
+  console.log("New connection from user:", userId, "with token:", token);
+
+  // You can now store this info, verify the token, or reject the socket if needed
+});
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token;
+
+  try {
+    const user = jwt.verify(token, "your-secret-key");
+    socket.user = user; // attach user info to socket
+    next();
+  } catch (err) {
+    console.log("Authentication failed");
+    next(new Error("Authentication error"));
+  }
+});
+
+
+  
+  */
