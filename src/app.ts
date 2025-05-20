@@ -1,6 +1,6 @@
-import express, { Application, Response, Request, NextFunction } from "express";
 import dotenv from "dotenv";
 dotenv.config();
+import express, { Application, Response, Request, NextFunction } from "express";
 import crypto from "crypto";
 import { connectDb } from "./config/db";
 import cors from "cors";

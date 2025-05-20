@@ -6,6 +6,8 @@ import Product from "../models/Product";
 import Order from "../models/Order";
 import Cart from "../models/Cart";
 
+const a = process.env.MONGO_URI
+console.log({a})
 export const connectDb = async (): Promise<any> => {
   try {
     mongoose.set("strictQuery", true);
