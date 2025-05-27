@@ -18,10 +18,8 @@ const repository_1 = __importDefault(require("../repositories/repository"));
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const jwt_1 = __importDefault(require("../utils/jwt"));
 const crypto_1 = __importDefault(require("crypto"));
-const IUser_1 = require("../types/IUser");
 const IAuthResponse_1 = require("../types/IAuthResponse");
 const ResponseHandler_1 = require("../utils/ResponseHandler");
-const xion_wallet_1 = __importDefault(require("../utils/wallet/xion_wallet"));
 const userRepository = new repository_1.default(User_1.default);
 exports.authWallet = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { walletAddress } = req.body;
@@ -35,16 +33,17 @@ exports.authWallet = (0, express_async_handler_1.default)((req, res) => __awaite
     // }
     let user = yield userRepository.findByEntity({ walletAddress });
     if (!user) {
-        const userWallet = yield xion_wallet_1.default.generateNewWallet();
-        user = yield userRepository.create({ walletAddress,
+        // const userWallet = await XionWallet.generateNewWallet();
+        user = yield userRepository.create({
+            walletAddress,
             // walletAddress: userWallet.address,
-            mnemonic: userWallet.mnemonic
+            // mnemonic: userWallet.mnemonic,
         });
         user.refreshToken = crypto_1.default.randomBytes(40).toString("hex");
-        if (!user.role.includes(IUser_1.Roles.SELLER)) {
-            user.role.push(IUser_1.Roles.SELLER);
-            yield user.save();
-        }
+        // if (!user.role.includes(Roles.SELLER)) {
+        //   user.role.push(Roles.SELLER);
+        //   await user.save();
+        // }
         yield user.save();
     }
     const accessToken = jwt_1.default.signToken({
@@ -52,7 +51,10 @@ exports.authWallet = (0, express_async_handler_1.default)((req, res) => __awaite
         roles: user.role,
     });
     const result = (0, IAuthResponse_1.UserResponse)(user);
-    (0, ResponseHandler_1.ResponseHandler)(res, 200, 'User Successfull login or Register', { accessToken, result });
+    (0, ResponseHandler_1.ResponseHandler)(res, 200, "User Successfull login or Register", {
+        accessToken,
+        result,
+    });
 }));
 exports.updateProfile = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { walletAddress, email, name, username, bio, avatar } = req.body;
@@ -77,7 +79,11 @@ exports.updateProfile = (0, express_async_handler_1.default)((req, res) => __awa
             return;
         }
         if (!user.email) {
-            res.status(400).json({ message: "You must add an email before changing your wallet address" });
+            res
+                .status(400)
+                .json({
+                message: "You must add an email before changing your wallet address",
+            });
             return;
         }
         user.walletAddress = walletAddress;

@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const cloudinary_1 = require("cloudinary");
 const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
 console.log(process.env.PORT);
 cloudinary_1.v2.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -24,7 +25,9 @@ class CloudinaryService {
     static uploadSingleImage(filePath) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const result = yield cloudinary_1.v2.uploader.upload(filePath, { resource_type: 'auto' });
+                const result = yield cloudinary_1.v2.uploader.upload(filePath, {
+                    resource_type: "auto",
+                });
                 fs_1.default.unlinkSync(filePath);
                 console.log(`✅ Uploaded: ${result.secure_url}`);
                 return result;
@@ -45,7 +48,9 @@ class CloudinaryService {
                 }
                 const isPdf = filePath.endsWith(".pdf");
                 const resourceType = isPdf ? "raw" : "image";
-                const result = yield cloudinary_1.v2.uploader.upload(filePath, { resource_type: resourceType });
+                const result = yield cloudinary_1.v2.uploader.upload(filePath, {
+                    resource_type: resourceType,
+                });
                 fs_1.default.unlinkSync(filePath);
                 console.log(`✅ Uploaded: ${result.secure_url}`);
                 return result;
@@ -59,10 +64,16 @@ class CloudinaryService {
     static uploadPdfFile(filePath) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const result = yield cloudinary_1.v2.uploader.upload(filePath, { resource_type: "raw", format: "pdf" });
+                const result = yield cloudinary_1.v2.uploader.upload(filePath, {
+                    resource_type: "raw",
+                    format: "pdf",
+                });
                 fs_1.default.unlinkSync(filePath);
                 console.log(`✅ Uploaded: ${result.secure_url}`);
-                console.log({ secure_url: result.secure_url, public_id: result.public_id });
+                console.log({
+                    secure_url: result.secure_url,
+                    public_id: result.public_id,
+                });
                 return result;
             }
             catch (error) {
@@ -71,18 +82,64 @@ class CloudinaryService {
             }
         });
     }
+    static uploadMultiplePdfFiles(filePaths) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const uploads = yield Promise.all(filePaths.map((filePath) => __awaiter(this, void 0, void 0, function* () {
+                    const fileSize = fs_1.default.statSync(filePath).size;
+                    const maxSize = 10 * 1024 * 1024; // 10 MB
+                    if (fileSize > maxSize) {
+                        throw new Error(`File ${path_1.default.basename(filePath)} exceeds 10MB limit`);
+                    }
+                    const result = yield cloudinary_1.v2.uploader.upload(filePath, {
+                        resource_type: "auto",
+                        format: "pdf",
+                        folder: "documents",
+                    });
+                    fs_1.default.unlinkSync(filePath);
+                    return result;
+                })));
+                return uploads;
+            }
+            catch (error) {
+                console.error("❌ Error uploading multiple PDFs:", error);
+                throw error;
+            }
+        });
+    }
     static uploadMultipleImages(filePaths) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log('uploadMultipleImages');
             try {
-                const results = [];
+                const maxSize = 10 * 1024 * 1024;
+                const uploads = [];
                 for (const filePath of filePaths) {
-                    const result = yield cloudinary_1.v2.uploader.upload(filePath);
-                    results.push(result);
-                    fs_1.default.unlinkSync(filePath);
+                    const absolutePath = path_1.default.resolve(filePath);
+                    if (!fs_1.default.existsSync(absolutePath)) {
+                        console.warn(`⚠️ File not found: ${absolutePath}`);
+                        continue;
+                    }
+                    let fileSize;
+                    try {
+                        fileSize = fs_1.default.statSync(absolutePath).size;
+                    }
+                    catch (err) {
+                        if (err instanceof Error)
+                            console.warn(`❌ Can't stat file ${absolutePath}:`, err.message);
+                        continue;
+                    }
+                    if (fileSize > maxSize) {
+                        console.warn(`❌ File too large: ${path_1.default.basename(absolutePath)}`);
+                        continue;
+                    }
+                    const result = yield cloudinary_1.v2.uploader.upload(absolutePath, {
+                        resource_type: "image",
+                        // folder: "images",
+                    });
+                    fs_1.default.unlinkSync(absolutePath);
                     console.log(`✅ Uploaded: ${result.secure_url}`);
+                    uploads.push(result);
                 }
-                return results;
+                return uploads;
             }
             catch (error) {
                 console.error("❌ Error uploading multiple images:", error);
@@ -118,7 +175,9 @@ class CloudinaryService {
         var _a;
         const parts = imageUrl.split("/");
         const fileName = (_a = parts.pop()) === null || _a === void 0 ? void 0 : _a.split(".")[0];
-        return parts.includes("upload") && fileName ? parts.slice(parts.indexOf("upload") + 1).join("/") : null;
+        return parts.includes("upload") && fileName
+            ? parts.slice(parts.indexOf("upload") + 1).join("/")
+            : null;
     }
 }
 exports.default = CloudinaryService;

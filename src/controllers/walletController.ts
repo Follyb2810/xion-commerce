@@ -47,7 +47,7 @@ export const authWallet = AsyncHandler(
       id: user._id,
       roles: user.role,
     });
-    console.log({user})
+
     const result = UserResponse(user);
     ResponseHandler(res, 200, "User Successfull login or Register", {
       accessToken,

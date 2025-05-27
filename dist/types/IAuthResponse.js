@@ -12,7 +12,8 @@ const UserResponse = (result) => {
         } : undefined,
         walletAddress: result.walletAddress,
         _id: result._id,
-        username: result.username
+        username: result.username,
+        isVerified: result.isVerified
     };
 };
 exports.UserResponse = UserResponse;

@@ -36,7 +36,7 @@ class Repository {
                     .find(query || {})
                     .sort({ createdAt: -1 })
                     .select(fieldsToSelect)
-                    .limit(limit || 10)
+                    .limit(limit || 20)
                     .skip(skip || 0);
                 queryBuilder = this.applyPopulate(queryBuilder, populateFields);
                 return yield queryBuilder;

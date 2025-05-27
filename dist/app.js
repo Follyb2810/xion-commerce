@@ -3,9 +3,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
+const express_1 = __importDefault(require("express"));
 const db_1 = require("./config/db");
 const cors_1 = __importDefault(require("cors"));
 const morgan_1 = __importDefault(require("morgan"));
@@ -36,7 +36,7 @@ const io = new socket_io_1.Server(server, {
 const corsConfig = {
     origin: allowedOrigins_1.allowedOrigins,
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
 };
 app.use((0, cors_1.default)(corsConfig));
 app.use((0, morgan_1.default)("tiny"));
@@ -97,6 +97,26 @@ app.use((err, req, res, next) => {
         message: err.message || "An unexpected error occurred",
     });
 });
+// app.use((req, res, next) => {
+//   req.io = io;
+//   next();
+// });
+// global.io = new Server(httpServer);
+// socket.js
+// const { Server } = require("socket.io");
+// let io;
+// module.exports = {
+//   init: (server) => {
+//     io = new Server(server);
+//     return io;
+//   },
+//   getIO: () => {
+//     if (!io) throw new Error("Socket.io not initialized!");
+//     return io;
+//   }
+// };
+// const io = require('./socket').getIO();
+// io.emit('event', payload);
 //?
 //?
 // io.use((socket, next) => {
@@ -183,3 +203,34 @@ io.on("connection", (socket) => {
     .catch((error) => {
     console.log("Invalid database connection: ", error);
 });
+/**
+client
+const socket = io("http://localhost:3000", {
+auth: {
+  token: "user-auth-token",
+  userId: "1234"
+}
+});
+server
+io.on("connection", (socket) => {
+const { token, userId } = socket.handshake.auth; // OR use .query if using query params
+console.log("New connection from user:", userId, "with token:", token);
+
+// You can now store this info, verify the token, or reject the socket if needed
+});
+io.use((socket, next) => {
+const token = socket.handshake.auth.token;
+
+try {
+  const user = jwt.verify(token, "your-secret-key");
+  socket.user = user; // attach user info to socket
+  next();
+} catch (err) {
+  console.log("Authentication failed");
+  next(new Error("Authentication error"));
+}
+});
+
+
+
+*/

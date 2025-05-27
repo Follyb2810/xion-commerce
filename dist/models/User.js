@@ -35,30 +35,85 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const IUser_1 = require("../types/IUser");
+const hash_1 = require("../utils/hash");
 const userSchema = new mongoose_1.Schema({
-    username: { type: String, unique: true, sparse: true },
-    email: { type: String, required: false, unique: true, sparse: true },
-    password: { type: String, required: false, default: null },
-    isVerified: { type: Boolean, required: false, default: false },
-    role: { type: [String], enum: Object.values(IUser_1.Roles), default: [IUser_1.Roles.BUYER] },
+    username: {
+        type: String,
+        unique: true,
+        sparse: true,
+        lowercase: true,
+        trim: true,
+    },
+    email: {
+        type: String,
+        unique: true,
+        sparse: true,
+        lowercase: true,
+        trim: true,
+    },
+    password: { type: String, default: null },
+    isVerified: { type: Boolean, default: false },
+    isEmailVerified: { type: Boolean, default: false },
+    isAuthenticated: { type: Boolean, default: false },
+    role: {
+        type: [String],
+        enum: Object.values(IUser_1.Roles),
+        default: [IUser_1.Roles.BUYER],
+    },
+    walletAddress: { type: String, sparse: true, default: null },
+    phoneNumber: { type: String, sparse: true, default: null },
+    mnemonic: { type: String, default: null },
     profile: {
         name: { type: String, default: null },
         bio: { type: String, default: null },
-        avatar: { type: String, default: null },
+        avatar: {
+            type: String,
+            default: 'https://via.placeholder.com/150',
+        },
     },
-    walletAddress: { type: String, unique: true, sparse: true, required: false, default: null },
-    mnemonic: { type: String, unique: true, sparse: true, required: false, default: null },
     refreshToken: { type: String, default: null },
-    history: [{
+    history: [
+        {
             paid: { type: Number, default: 0 },
             item: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Product' },
             timestamp: { type: Date, default: Date.now },
             transactionHash: { type: String, default: null },
-        }]
+        },
+    ],
+    kyc: {
+        status: {
+            type: String,
+            enum: Object.values(IUser_1.KYCStatus),
+            default: IUser_1.KYCStatus.NOT_SUBMITTED,
+        },
+        documents: [
+            {
+                type: {
+                    type: String, // e.g., 'passport'
+                },
+                url: String,
+                uploadedAt: { type: Date, default: Date.now },
+            },
+        ],
+        submittedAt: { type: Date, default: null },
+        verifiedAt: { type: Date, default: null },
+        rejectedReason: { type: String, default: null },
+    },
+    verificationToken: String,
+    verificationTokenExpires: Date,
+    passwordResetToken: String,
+    passwordResetExpires: Date,
+    lastLogin: Date,
+    failedLoginAttempts: { type: Number, default: 0 },
+    accountLocked: { type: Boolean, default: false },
+    accountUnlockTime: { type: Date, default: null },
 }, { timestamps: true });
 userSchema.pre('save', function (next) {
     if (!this.username && this.email) {
         this.username = this.email;
+    }
+    if (this.isModified('mnemonic') && this.mnemonic && this._id) {
+        this.mnemonic = (0, hash_1.encryptKey)(this.mnemonic, this._id.toString());
     }
     next();
 });

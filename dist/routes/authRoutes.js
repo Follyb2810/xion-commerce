@@ -14,6 +14,7 @@ router.get("/profile", auth_1.auth, authController_1.UserProfile);
 router.get("/verify/:id", auth_1.auth, authController_1.verifyUser);
 router.put("/remove-role/:id", auth_1.auth, authController_1.removeUserRole);
 router.get("/user/:id", auth_1.auth, authController_1.SingleUser);
+router.patch("/profile", auth_1.auth, authController_1.updateUserProfile);
 // router.get("/profile", auth, UserProfile);
 // router.post("/register", ValidateRequest.validateUserAuth(), ValidateRequest.validateMiddleware, register);
 // router.post("/login", ValidateRequest.validateUserAuth(), ValidateRequest.validateMiddleware, login);
