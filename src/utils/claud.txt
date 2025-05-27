@@ -656,3 +656,70 @@ export const flutterwaveWebhook = async (req: Request, res: Response) => {
   res.sendStatus(200);
 };
 
+  //   static async uploadMultiplePdfFiles(filePaths: string[]): Promise<UploadApiResponse[]> {
+  //   try {
+  //     const uploads = await Promise.all(
+  //       filePaths.map(async (filePath) => {
+  //         const timestamp = Math.floor(Date.now() / 1000);
+  //         const signatureString = `format=pdf&timestamp=${timestamp}`;
+  //         const signature = crypto
+  //           .createHash('sha1')
+  //           .update(signatureString + process.env.CLOUDINARY_API_SECRET!)
+  //           .digest('hex');
+
+  //         const result = await cloudinary.uploader.upload(filePath, {
+  //           format: 'pdf',
+  //           resource_type: 'auto',
+  //           timestamp,
+  //           signature,
+  //           api_key: process.env.CLOUDINARY_API_KEY!,
+  //         });
+
+  //         fs.unlinkSync(filePath);
+  //         return result;
+  //       })
+  //     );
+
+  //     return uploads;
+  //     // const results: UploadApiResponse[] = [];
+  //     // for (const filePath of filePaths) {
+  //     //   const fileSize = fs.statSync(filePath).size;
+  //     //   const maxSize = 10 * 1024 * 1024;
+  //     //   if (fileSize > maxSize) {
+  //     //     throw new Error(`File ${path.basename(filePath)} exceeds 10MB limit`);
+  //     //   }
+
+  //     //   const result = await cloudinary.uploader.upload(filePath, {
+  //     //     resource_type: "raw",
+  //     //     format: "pdf",
+  //     //   });
+  //     //   results.push(result);
+  //     //   fs.unlinkSync(filePath);
+  //     //   console.log(`✅ Uploaded PDF: ${result.secure_url}`);
+  //     // }
+  //     // return results;
+  //   } catch (error) {
+  //     console.error("❌ Error uploading multiple PDFs:", error);
+  //     throw error;
+  //   }
+  // }
+
+
+    // static async uploadMultipleImages(
+  //   filePaths: string[]
+  // ): Promise<UploadApiResponse[]> {
+  //   console.log("uploadMultipleImages");
+  //   try {
+  //     const results: UploadApiResponse[] = [];
+  //     for (const filePath of filePaths) {
+  //       const result = await cloudinary.uploader.upload(filePath);
+  //       results.push(result);
+  //       fs.unlinkSync(filePath);
+  //       console.log(`✅ Uploaded: ${result.secure_url}`);
+  //     }
+  //     return results;
+  //   } catch (error) {
+  //     console.error("❌ Error uploading multiple images:", error);
+  //     throw error;
+  //   }
+  // }

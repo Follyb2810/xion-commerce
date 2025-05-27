@@ -16,7 +16,8 @@ export const UserResponse = (result: IUser): IUserDto => {
         } : undefined, 
         walletAddress: result.walletAddress!,
         _id: result._id,
-        username: result.username!
+        username: result.username!,
+        isVerified: result.isVerified
     };
 };
 
@@ -32,6 +33,9 @@ interface IUserDto {
     walletAddress: null | string;
     _id: string;
     username: string | null;
+    isVerified?: boolean;
+
+
 }
 
 interface IProfile {

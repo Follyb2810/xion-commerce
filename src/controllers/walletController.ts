@@ -29,17 +29,17 @@ export const authWallet = AsyncHandler(
     let user = await userRepository.findByEntity({ walletAddress });
 
     if (!user) {
-      const userWallet = await XionWallet.generateNewWallet();
+      // const userWallet = await XionWallet.generateNewWallet();
       user = await userRepository.create({
         walletAddress,
         // walletAddress: userWallet.address,
-        mnemonic: userWallet.mnemonic,
+        // mnemonic: userWallet.mnemonic,
       });
       user.refreshToken = crypto.randomBytes(40).toString("hex");
-      if (!user.role.includes(Roles.SELLER)) {
-        user.role.push(Roles.SELLER);
-        await user.save();
-      }
+      // if (!user.role.includes(Roles.SELLER)) {
+      //   user.role.push(Roles.SELLER);
+      //   await user.save();
+      // }
       await user.save();
     }
 

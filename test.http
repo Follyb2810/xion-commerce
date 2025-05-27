@@ -1,4 +1,4 @@
-@PORT = http://localhost:5000/api
+@PORT = http://localhost:8080/api
 @Json = application/json
 @formUrl =application/x-www-form-urlencoded
 @multiPart = multipart/form-data; boundary=----WebKitFormBoundarym9d0EsD6M8DFTiD8
@@ -21,7 +21,7 @@ Content-Type: {{Json}}
 
 //   "walletAddress":"cosmos1rs2tnhe4mxpjnedhc84pc0v7mcy5gtmga0a9n3"
 {
-  "walletAddress":"cosmos1rs2tnhenbnnk4mxpjnedhc84pc0v7mcy5gtmga0a9n00" 
+  "walletAddress":"cosmos1rs2tnhenbnnk4mxpjnedhc84pc0v7mcy5gtmga0a9n09" 
 }
 ### user profile
 GET {{PORT}}/profile/
