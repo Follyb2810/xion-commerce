@@ -208,7 +208,7 @@ const updateUserProfileFromOrder = (userId, orderDetails) => __awaiter(void 0, v
             }
         }
         if (orderDetails.phoneNumber) {
-            updates.phoneNumber = orderDetails.phoneNumber;
+            user.phoneNumber = orderDetails.phoneNumber;
         }
         if (orderDetails.fullName) {
             updates.profile = Object.assign(Object.assign({}, user.profile), { name: orderDetails.fullName });

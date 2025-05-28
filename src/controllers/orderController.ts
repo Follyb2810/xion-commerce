@@ -283,7 +283,7 @@ const updateUserProfileFromOrder = async (
     }
 
     if (orderDetails.phoneNumber) {
-      updates.phoneNumber = orderDetails.phoneNumber;
+      user.phoneNumber = orderDetails.phoneNumber;
     }
 
     if (orderDetails.fullName) {
