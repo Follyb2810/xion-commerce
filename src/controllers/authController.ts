@@ -1,6 +1,4 @@
 import { Request, Response } from "express";
-import User from "../models/User";
-import Repository from "../repositories/repository";
 import { IUser, Roles } from "../types/IUser";
 import crypto from "crypto";
 import { ComparePassword, hashPwd } from "../utils/bcrypt";
@@ -9,9 +7,8 @@ import AsyncHandler from "express-async-handler";
 import { UserResponse } from "../types/IAuthResponse";
 import { AuthRequest } from "../middleware/auth";
 import { ErrorHandler, ResponseHandler } from "../utils/ResponseHandler";
-import XionWallet from "../utils/wallet/xion_wallet";
+import UserRepository from "../repositories/UserRepository";
 
-const authRepository = new Repository(User);
 
 export const register = AsyncHandler(
   async (req: Request, res: Response): Promise<void> => {
@@ -25,13 +22,13 @@ export const register = AsyncHandler(
       return ErrorHandler(res, "USER_EXIST", 403);
     }
 
-    const existingUser = await authRepository.findByEntity({ email });
+    const existingUser = await UserRepository.findByEntity({ email });
     if (existingUser) {
       return ErrorHandler(res, "USER_EXIST", 400);
     }
 
     const hashedPassword = await hashPwd(password);
-    const newUser = await authRepository.create({
+    const newUser = await UserRepository.create({
       email,
       password: hashedPassword,
     } as Partial<IUser>);
@@ -62,7 +59,7 @@ export const login = AsyncHandler(
       return ErrorHandler(res, "EMAIL_PASS_ERROR", 400);
     }
 
-    const user = await authRepository.findByEntity({ email });
+    const user = await UserRepository.findByEntity({ email });
     if (!user || !(await ComparePassword(password, user.password!))) {
       return ErrorHandler(res, "INVALID_CREDENTIALS", 401);
     }
@@ -84,7 +81,7 @@ export const login = AsyncHandler(
 export const SingleUser = AsyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
-    const user = await authRepository.findById(id);
+    const user = await UserRepository.findById(id);
     if (!user) {
       return ErrorHandler(res, "USER_NOTFOUND", 404);
     }
@@ -97,12 +94,12 @@ export const SingleUser = AsyncHandler(
 export const verifyUser = AsyncHandler(
   async (req: AuthRequest, res: Response): Promise<void> => {
     const { id } = req.params;
-    const user = await authRepository.findById(id);
+    const user = await UserRepository.findById(id);
     if (!user) {
       return ErrorHandler(res, "USER_NOTFOUND", 404);
     }
 
-    await authRepository.updateOne(
+    await UserRepository.updateOne(
       { _id: id },
       { $addToSet: { role: Roles.SELLER } }
     );
@@ -118,12 +115,12 @@ export const removeUserRole = AsyncHandler(
       return ErrorHandler(res, "INVALID_ROLE", 400);
     }
 
-    const user = await authRepository.findById(id);
+    const user = await UserRepository.findById(id);
     if (!user) {
       return ErrorHandler(res, "USER_NOTFOUND", 404);
     }
 
-    await authRepository.updateOne({ _id: id }, { $pull: { role } });
+    await UserRepository.updateOne({ _id: id }, { $pull: { role } });
     return ResponseHandler(res, 200, "Role removed successfully");
   }
 );
@@ -131,7 +128,7 @@ export const removeUserRole = AsyncHandler(
 export const UserProfile = AsyncHandler(
   async (req: AuthRequest, res: Response): Promise<void> => {
     const id = req._id;
-    const user = await authRepository.findById(id!);
+    const user = await UserRepository.findById(id!);
     if (!user) {
       return ErrorHandler(res, "USER_NOTFOUND", 404);
     }
@@ -143,7 +140,7 @@ export const UserProfile = AsyncHandler(
 
 export const allUser = AsyncHandler(
   async (req: AuthRequest, res: Response): Promise<void> => {
-    const users = await authRepository.getAll();
+    const users = await UserRepository.getAll();
     return ResponseHandler(res, 200, "All users retrieved successfully", {
       users: users.map(UserResponse),
     });
@@ -158,7 +155,7 @@ export const updateUserProfile = AsyncHandler(
       return ErrorHandler(res, "NO_DATA_PROVIDED", 400);
     }
 
-    const user = await authRepository.findById(id!);
+    const user = await UserRepository.findById(id!);
     if (!user) {
       return ErrorHandler(res, "USER_NOTFOUND", 404);
     }
@@ -166,7 +163,7 @@ export const updateUserProfile = AsyncHandler(
     const normalizedEmail = email?.trim().toLowerCase();
 
     if (normalizedEmail && normalizedEmail !== user.email) {
-      const emailTaken = await authRepository.findByEntity({
+      const emailTaken = await UserRepository.findByEntity({
         email: normalizedEmail,
       });
 
@@ -189,12 +186,24 @@ export const updateUserProfile = AsyncHandler(
       };
     }
 
-    const updatedUser = await authRepository.updateById(id!, updates);
+     await UserRepository.updateById(id!, updates);
 
-    return ResponseHandler(res, 200, "User profile updated successfully", {
-      user: UserResponse(updatedUser),
-    });
+    return ResponseHandler(res, 200, "User profile updated successfully");
   }
 );
 
+export const getCheckoutData = AsyncHandler(async(req:AuthRequest,res:Response)=>{
+   const { walletAddress } = req.params;
+
+    if (!walletAddress) {
+      res.status(400).json({ message: "Wallet address is required" });
+      return;
+    }
+    const user = await UserRepository.findByEntity({walletAddress},'email phoneNumber profile.name')
+    return ResponseHandler(res, 200, "All users retrieved successfully", {
+      user
+    });
+    
+
+})
 

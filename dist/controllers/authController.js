@@ -12,9 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateUserProfile = exports.allUser = exports.UserProfile = exports.removeUserRole = exports.verifyUser = exports.SingleUser = exports.login = exports.register = void 0;
-const User_1 = __importDefault(require("../models/User"));
-const repository_1 = __importDefault(require("../repositories/repository"));
+exports.getCheckoutData = exports.updateUserProfile = exports.allUser = exports.UserProfile = exports.removeUserRole = exports.verifyUser = exports.SingleUser = exports.login = exports.register = void 0;
 const IUser_1 = require("../types/IUser");
 const crypto_1 = __importDefault(require("crypto"));
 const bcrypt_1 = require("../utils/bcrypt");
@@ -22,7 +20,7 @@ const jwt_1 = __importDefault(require("../utils/jwt"));
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const IAuthResponse_1 = require("../types/IAuthResponse");
 const ResponseHandler_1 = require("../utils/ResponseHandler");
-const authRepository = new repository_1.default(User_1.default);
+const UserRepository_1 = __importDefault(require("../repositories/UserRepository"));
 exports.register = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -31,12 +29,12 @@ exports.register = (0, express_async_handler_1.default)((req, res) => __awaiter(
     if (email.toLowerCase() === "superadmin@chaincart.com") {
         return (0, ResponseHandler_1.ErrorHandler)(res, "USER_EXIST", 403);
     }
-    const existingUser = yield authRepository.findByEntity({ email });
+    const existingUser = yield UserRepository_1.default.findByEntity({ email });
     if (existingUser) {
         return (0, ResponseHandler_1.ErrorHandler)(res, "USER_EXIST", 400);
     }
     const hashedPassword = yield (0, bcrypt_1.hashPwd)(password);
-    const newUser = yield authRepository.create({
+    const newUser = yield UserRepository_1.default.create({
         email,
         password: hashedPassword,
     });
@@ -59,7 +57,7 @@ exports.login = (0, express_async_handler_1.default)((req, res) => __awaiter(voi
     if (!email || !password) {
         return (0, ResponseHandler_1.ErrorHandler)(res, "EMAIL_PASS_ERROR", 400);
     }
-    const user = yield authRepository.findByEntity({ email });
+    const user = yield UserRepository_1.default.findByEntity({ email });
     if (!user || !(yield (0, bcrypt_1.ComparePassword)(password, user.password))) {
         return (0, ResponseHandler_1.ErrorHandler)(res, "INVALID_CREDENTIALS", 401);
     }
@@ -76,7 +74,7 @@ exports.login = (0, express_async_handler_1.default)((req, res) => __awaiter(voi
 }));
 exports.SingleUser = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
-    const user = yield authRepository.findById(id);
+    const user = yield UserRepository_1.default.findById(id);
     if (!user) {
         return (0, ResponseHandler_1.ErrorHandler)(res, "USER_NOTFOUND", 404);
     }
@@ -86,11 +84,11 @@ exports.SingleUser = (0, express_async_handler_1.default)((req, res) => __awaite
 }));
 exports.verifyUser = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
-    const user = yield authRepository.findById(id);
+    const user = yield UserRepository_1.default.findById(id);
     if (!user) {
         return (0, ResponseHandler_1.ErrorHandler)(res, "USER_NOTFOUND", 404);
     }
-    yield authRepository.updateOne({ _id: id }, { $addToSet: { role: IUser_1.Roles.SELLER } });
+    yield UserRepository_1.default.updateOne({ _id: id }, { $addToSet: { role: IUser_1.Roles.SELLER } });
     return (0, ResponseHandler_1.ResponseHandler)(res, 200, "User successfully verified");
 }));
 exports.removeUserRole = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -99,16 +97,16 @@ exports.removeUserRole = (0, express_async_handler_1.default)((req, res) => __aw
     if (!Object.values(IUser_1.Roles).includes(role)) {
         return (0, ResponseHandler_1.ErrorHandler)(res, "INVALID_ROLE", 400);
     }
-    const user = yield authRepository.findById(id);
+    const user = yield UserRepository_1.default.findById(id);
     if (!user) {
         return (0, ResponseHandler_1.ErrorHandler)(res, "USER_NOTFOUND", 404);
     }
-    yield authRepository.updateOne({ _id: id }, { $pull: { role } });
+    yield UserRepository_1.default.updateOne({ _id: id }, { $pull: { role } });
     return (0, ResponseHandler_1.ResponseHandler)(res, 200, "Role removed successfully");
 }));
 exports.UserProfile = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const id = req._id;
-    const user = yield authRepository.findById(id);
+    const user = yield UserRepository_1.default.findById(id);
     if (!user) {
         return (0, ResponseHandler_1.ErrorHandler)(res, "USER_NOTFOUND", 404);
     }
@@ -117,7 +115,7 @@ exports.UserProfile = (0, express_async_handler_1.default)((req, res) => __await
     });
 }));
 exports.allUser = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const users = yield authRepository.getAll();
+    const users = yield UserRepository_1.default.getAll();
     return (0, ResponseHandler_1.ResponseHandler)(res, 200, "All users retrieved successfully", {
         users: users.map(IAuthResponse_1.UserResponse),
     });
@@ -128,13 +126,13 @@ exports.updateUserProfile = (0, express_async_handler_1.default)((req, res) => _
     if (!email && !phoneNumber && !name) {
         return (0, ResponseHandler_1.ErrorHandler)(res, "NO_DATA_PROVIDED", 400);
     }
-    const user = yield authRepository.findById(id);
+    const user = yield UserRepository_1.default.findById(id);
     if (!user) {
         return (0, ResponseHandler_1.ErrorHandler)(res, "USER_NOTFOUND", 404);
     }
     const normalizedEmail = email === null || email === void 0 ? void 0 : email.trim().toLowerCase();
     if (normalizedEmail && normalizedEmail !== user.email) {
-        const emailTaken = yield authRepository.findByEntity({
+        const emailTaken = yield UserRepository_1.default.findByEntity({
             email: normalizedEmail,
         });
         const isEmailUsedByAnotherUser = emailTaken && emailTaken._id.toString() !== user._id.toString();
@@ -150,8 +148,17 @@ exports.updateUserProfile = (0, express_async_handler_1.default)((req, res) => _
     if (name) {
         updates.profile = Object.assign(Object.assign({}, user.profile), { name });
     }
-    const updatedUser = yield authRepository.updateById(id, updates);
-    return (0, ResponseHandler_1.ResponseHandler)(res, 200, "User profile updated successfully", {
-        user: (0, IAuthResponse_1.UserResponse)(updatedUser),
+    yield UserRepository_1.default.updateById(id, updates);
+    return (0, ResponseHandler_1.ResponseHandler)(res, 200, "User profile updated successfully");
+}));
+exports.getCheckoutData = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { walletAddress } = req.params;
+    if (!walletAddress) {
+        res.status(400).json({ message: "Wallet address is required" });
+        return;
+    }
+    const user = yield UserRepository_1.default.findByEntity({ walletAddress }, 'email phoneNumber profile.name');
+    return (0, ResponseHandler_1.ResponseHandler)(res, 200, "All users retrieved successfully", {
+        user
     });
 }));

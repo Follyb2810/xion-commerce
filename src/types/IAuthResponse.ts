@@ -18,7 +18,8 @@ export const UserResponse = (result: IUser): IUserDto => {
         _id: result._id,
         username: result.username!,
         isVerified: result.isVerified,
-        kycStatus:result.kyc?.status
+        kycStatus:result.kyc?.status,
+        phoneNumber:result.phoneNumber,
     };
 };
 
@@ -33,6 +34,7 @@ interface IUserDto {
     profile?: IProfile;
     walletAddress: null | string;
     _id: string;
+    phoneNumber?: string;
     username: string | null;
     isVerified?: boolean;
     kycStatus?:KYCStatus

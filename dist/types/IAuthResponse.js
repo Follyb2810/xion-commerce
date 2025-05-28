@@ -15,7 +15,8 @@ const UserResponse = (result) => {
         _id: result._id,
         username: result.username,
         isVerified: result.isVerified,
-        kycStatus: (_a = result.kyc) === null || _a === void 0 ? void 0 : _a.status
+        kycStatus: (_a = result.kyc) === null || _a === void 0 ? void 0 : _a.status,
+        phoneNumber: result.phoneNumber,
     };
 };
 exports.UserResponse = UserResponse;

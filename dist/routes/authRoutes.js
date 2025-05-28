@@ -13,6 +13,7 @@ router.get("/user", authController_1.allUser);
 router.post("/register", authController_1.register);
 router.post("/login", authController_1.login);
 router.get("/profile", auth_1.auth, authController_1.UserProfile);
+router.get("/check_out/:walletAddress", auth_1.auth, authController_1.getCheckoutData);
 router.get("/verify/:id", auth_1.auth, authController_1.verifyUser);
 router.put("/remove-role/:id", auth_1.auth, authController_1.removeUserRole);
 router.get("/user/:id", auth_1.auth, authController_1.SingleUser);
