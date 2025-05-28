@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserPurchaseHistory = exports.confirmDirectPurchase = exports.checkProductAvailability = exports.getUserOrder = exports.getDirectPurchaseHistory = exports.updateOrderStatus = exports.allOrder = void 0;
+exports.getUserPurchaseHistory = exports.directPurchase = exports.checkProductAvailability = exports.getUserOrder = exports.getDirectPurchaseHistory = exports.updateOrderStatus = exports.allOrder = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const ResponseHandler_1 = require("../utils/ResponseHandler");
 const mongoose_1 = require("mongoose");
@@ -27,38 +27,11 @@ exports.allOrder = (0, express_async_handler_1.default)((req, res) => __awaiter(
     const all = yield OrderRepository_1.default.getAll();
     res.json(all);
 }));
-// export const updateOrderStatus = AsyncHandler(async (req: XionRequest, res: Response) => {
-//   const { orderId } = req.params;
-//   let { status } = req.body;
-//   if (!orderId || !status) {
-//       return ResponseHandler(res, 400, "Order ID and status are required.");
-//   }
-//   status = status.toLowerCase();
-//   const validStatuses = Object.values(OrderStatus).map(s => s.toLowerCase());
-//   if (!validStatuses.includes(status)) {
-//     return ResponseHandler(res, 400, "Invalid status.");
-//   }
-//   const order = await OrderRepository.findById(orderId);
-//   if (!order) {
-//     return ResponseHandler(res, 404, "Order not found.");
-//   }
-//   if (status === OrderStatus.CANCELED) {
-//     for (const item of order.items) {
-//       await ProductRepository.updateById(item.product.toString(), { $inc: { stock: item.quantity } });
-//     }
-//   }
-//   const updatedOrder = await OrderRepository.updateById(orderId, { status });
-//   const responsePayload = {
-//     updatedOrder,
-//     escrowTransaction: req.transactionData, 
-//   };
-//     ResponseHandler(res, 200, "Order status updated",responsePayload);
-// });
 exports.updateOrderStatus = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { orderId } = req.params;
     let { status } = req.body;
     status = status.toLowerCase();
-    const validStatuses = Object.values(IOrder_1.OrderStatus).map(s => s.toLowerCase());
+    const validStatuses = Object.values(IOrder_1.OrderStatus).map((s) => s.toLowerCase());
     if (!validStatuses.includes(status)) {
         return (0, ResponseHandler_1.ErrorHandler)(res, "INVALID_STATUS", 400);
     }
@@ -68,13 +41,15 @@ exports.updateOrderStatus = (0, express_async_handler_1.default)((req, res) => _
     }
     if (status === IOrder_1.OrderStatus.CANCELED) {
         for (const item of order.items) {
-            yield ProductRepository_1.default.updateById(item.product.toString(), { $inc: { stock: item.quantity } });
+            yield ProductRepository_1.default.updateById(item.product.toString(), {
+                $inc: { stock: item.quantity },
+            });
         }
     }
     const updatedOrder = yield OrderRepository_1.default.updateById(orderId, { status });
     (0, ResponseHandler_1.ResponseHandler)(res, 200, "Order status updated", updatedOrder);
 }));
-//! 
+//!
 exports.getDirectPurchaseHistory = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userId = req._id;
     const user = yield UserRepository_1.default.findById(userId, "history.item");
@@ -96,31 +71,30 @@ exports.getUserOrder = (0, express_async_handler_1.default)((req, res) => __awai
     console.log(orders);
     (0, ResponseHandler_1.ResponseHandler)(res, 200, "Purchase details retrieved", orders);
 }));
-//! 
+//!
 exports.checkProductAvailability = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { quantity } = req.body;
     const { product, seller } = req;
     (0, ResponseHandler_1.ResponseHandler)(res, 200, "Product available", (0, ProductResponse_1.formatProductResponse)(product, seller, quantity));
 }));
-//! 
-exports.confirmDirectPurchase = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+//!
+exports.directPurchase = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userId = req._id;
-    const { productId, quantity = 1, transactionHash } = req.body;
+    const { productId, quantity = 1, transactionHash, email, fullName, phoneNumber, saveDetailsToProfile = false, } = req.body;
     if (!mongoose_1.Types.ObjectId.isValid(productId)) {
-        console.error('INVALID_PRODUCT_ID', 'confirmDirectPurchase transactionHash');
+        console.error("INVALID_PRODUCT_ID", "confirmDirectPurchase transactionHash");
         return (0, ResponseHandler_1.ErrorHandler)(res, "INVALID_PRODUCT_ID", 400);
     }
     if (!transactionHash) {
-        console.error('TRANSACTION_HASH_REQUIRED', 'confirmDirectPurchase transactionHash');
+        console.error("TRANSACTION_HASH_REQUIRED", "confirmDirectPurchase transactionHash");
         return (0, ResponseHandler_1.ErrorHandler)(res, "TRANSACTION_HASH_REQUIRED", 400);
     }
     const product = yield ProductRepository_1.default.findById(productId);
     if (!product) {
         return (0, ResponseHandler_1.ErrorHandler)(res, "PRODUCT_NOT_FOUND", 404);
     }
-    // console.error(product,'confirmDirectPurchase product')
     if (product.stock < quantity) {
-        console.error(`${product.stock} - ${quantity}`, 'confirmDirectPurchase product');
+        console.error(`${product.stock} - ${quantity}`, "confirmDirectPurchase product");
         return (0, ResponseHandler_1.ErrorHandler)(res, "INSUFFICIENT_STOCK", 400);
     }
     const totalAmount = product.price * quantity;
@@ -138,14 +112,19 @@ exports.confirmDirectPurchase = (0, express_async_handler_1.default)((req, res) 
             totalAmount: totalAmount,
             payment: {
                 amount: totalAmount,
-                txHash: transactionHash
+                txHash: transactionHash,
             },
-            status: IOrder_1.OrderStatus.PENDING
+            email,
+            fullName,
+            phoneNumber,
+            status: IOrder_1.OrderStatus.PENDING,
         });
         yield ProductRepository_1.default.updateById(productId, {
-            $inc: { stock: -quantity }
+            $inc: { stock: -quantity },
         });
-        let cart = yield CartRepository_1.default.findByEntity({ user: new mongoose_1.Types.ObjectId(userId) });
+        let cart = yield CartRepository_1.default.findByEntity({
+            user: new mongoose_1.Types.ObjectId(userId),
+        });
         if (cart) {
             const itemIndex = cart.items.findIndex((item) => item.product.toString() === productId);
             if (itemIndex !== -1) {
@@ -167,18 +146,26 @@ exports.confirmDirectPurchase = (0, express_async_handler_1.default)((req, res) 
                     item: new mongoose_1.Types.ObjectId(productId),
                     timestamp: new Date(),
                     transactionHash,
-                    orderId: order._id
-                }
-            }
+                    orderId: order._id,
+                },
+            },
         });
-        (0, ResponseHandler_1.ResponseHandler)(res, 201, "Purchase successful", {
+        if (saveDetailsToProfile) {
+            yield updateUserProfileFromOrder(userId, {
+                email,
+                fullName,
+                phoneNumber,
+            });
+        }
+        return (0, ResponseHandler_1.ResponseHandler)(res, 201, "Purchase successful", {
             order,
             transactionHash,
             updatedStock: product.stock - quantity,
             product: {
                 title: product.title,
-                price: product.price
-            }
+                price: product.price,
+            },
+            profileUpdated: saveDetailsToProfile,
         });
     }
     catch (error) {
@@ -202,3 +189,32 @@ exports.getUserPurchaseHistory = (0, express_async_handler_1.default)((req, res)
     console.log(orders);
     (0, ResponseHandler_1.ResponseHandler)(res, 200, "User purchase history retrieved", orders);
 }));
+const updateUserProfileFromOrder = (userId, orderDetails) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    try {
+        const user = yield UserRepository_1.default.findById(userId);
+        if (!user)
+            return;
+        const normalizedEmail = (_a = orderDetails.email) === null || _a === void 0 ? void 0 : _a.trim().toLowerCase();
+        const updates = {};
+        if (normalizedEmail && normalizedEmail !== user.email) {
+            const emailTaken = yield UserRepository_1.default.findByEntity({
+                email: normalizedEmail
+            });
+            const isEmailUsedByAnotherUser = emailTaken && emailTaken._id.toString() !== user._id.toString();
+            if (!isEmailUsedByAnotherUser) {
+                updates.email = normalizedEmail;
+                updates.isEmailVerified = false;
+            }
+        }
+        if (orderDetails.phoneNumber) {
+            updates.phoneNumber = orderDetails.phoneNumber;
+        }
+        if (orderDetails.fullName) {
+            updates.profile = Object.assign(Object.assign({}, user.profile), { name: orderDetails.fullName });
+        }
+    }
+    catch (error) {
+        console.error("Profile update from order failed:", error);
+    }
+});

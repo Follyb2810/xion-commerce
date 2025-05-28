@@ -20,6 +20,7 @@ class MulterService {
             { name: "image_of_land", maxCount: 4 },
             { name: "document_of_land", maxCount: 5 },
             { name: "coverImage", maxCount: 1 },
+            { name: "kycDocuments", maxCount: 1 },
         ]);
     }
 }

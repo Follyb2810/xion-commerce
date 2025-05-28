@@ -81,12 +81,13 @@ const connectDb = () => __awaiter(void 0, void 0, void 0, function* () {
         if (!existingUser) {
             const hashedPassword = yield (0, bcrypt_1.hashPwd)("Chaincart123");
             const superAdmin = new User_1.default({
-                username: "superadmin",
+                username: "superadmin123",
                 email,
                 password: hashedPassword,
                 isVerified: true,
                 isEmailVerified: true,
                 isAuthenticated: true,
+                walletAddress: "xion15rdntqgppzvgvcngs3e592wt6fhwfmctqxppv2qrhv7s47zxy9ksfe5g9r",
                 role: [IUser_1.Roles.ADMIN, IUser_1.Roles.SUPERADMIN, IUser_1.Roles.BUYER, IUser_1.Roles.SELLER],
                 profile: {
                     name: "Super Admin",

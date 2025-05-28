@@ -1,6 +1,8 @@
 import express from "express";
 import { allUser, login, register, removeUserRole, SingleUser, updateUserProfile, UserProfile, verifyUser } from "../controllers/authController";
 import { auth } from "../middleware/auth";
+import MulterService from "../utils/multer";
+import { getKycStatus, uploadKycDocuments, verifyKYC } from "../controllers/kycController";
 
 const router = express.Router();
 
@@ -12,8 +14,9 @@ router.get("/verify/:id", auth, verifyUser);
 router.put("/remove-role/:id",auth, removeUserRole);
 router.get("/user/:id", auth, SingleUser);
 router.patch("/profile", auth, updateUserProfile);
+router.post('/kyc/upload', auth, MulterService.uploadSingle('kycDocuments'), uploadKycDocuments);
+router.get('/kyc/status', auth, getKycStatus);
+router.post('/kyc/admin/update', auth,verifyKYC);
 
-// router.get("/profile", auth, UserProfile);
-// router.post("/register", ValidateRequest.validateUserAuth(), ValidateRequest.validateMiddleware, register);
-// router.post("/login", ValidateRequest.validateUserAuth(), ValidateRequest.validateMiddleware, login);
+
 export default router;

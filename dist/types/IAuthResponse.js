@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserResponse = void 0;
 const UserResponse = (result) => {
+    var _a;
     return {
         email: result.email,
         role: result.role,
@@ -13,7 +14,8 @@ const UserResponse = (result) => {
         walletAddress: result.walletAddress,
         _id: result._id,
         username: result.username,
-        isVerified: result.isVerified
+        isVerified: result.isVerified,
+        kycStatus: (_a = result.kyc) === null || _a === void 0 ? void 0 : _a.status
     };
 };
 exports.UserResponse = UserResponse;

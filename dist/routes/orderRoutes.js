@@ -12,7 +12,7 @@ router.get('/all_user_order', auth_1.auth, orderController_1.getUserPurchaseHist
 router.put('/:orderId/status', auth_1.auth, orderController_1.updateOrderStatus);
 // router.put( "/escrow/:orderId", auth,releaseOrCancelEscrow, updateOrderStatus);
 router.post('/available', auth_1.auth, CheckStock_1.CheckStock, orderController_1.checkProductAvailability);
-router.post('/confirm', auth_1.auth, orderController_1.confirmDirectPurchase);
+router.post('/confirm', auth_1.auth, orderController_1.directPurchase);
 /**
 AuthMiddleware, // Ensure user authentication
   releaseOrCancelEscrow, // First, process escrow transaction

@@ -1,4 +1,4 @@
-import { IUser } from "./IUser";
+import { IUser, KYCStatus } from "./IUser";
 
 export type IResponse<T> = {
     data: T;
@@ -17,7 +17,8 @@ export const UserResponse = (result: IUser): IUserDto => {
         walletAddress: result.walletAddress!,
         _id: result._id,
         username: result.username!,
-        isVerified: result.isVerified
+        isVerified: result.isVerified,
+        kycStatus:result.kyc?.status
     };
 };
 
@@ -34,6 +35,7 @@ interface IUserDto {
     _id: string;
     username: string | null;
     isVerified?: boolean;
+    kycStatus?:KYCStatus
 
 
 }

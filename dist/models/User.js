@@ -89,7 +89,7 @@ const userSchema = new mongoose_1.Schema({
         documents: [
             {
                 type: {
-                    type: String, // e.g., 'passport'
+                    type: String,
                 },
                 url: String,
                 uploadedAt: { type: Date, default: Date.now },

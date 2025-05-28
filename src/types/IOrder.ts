@@ -21,6 +21,9 @@ export interface IOrder extends Document {
   items: IOrderItem[];
   totalAmount: number;
   status: OrderStatus
+  email?: string;
+  fullName?: string;
+  phoneNumber?:string;
   payment: {
     amount: number;
     txHash?: string;

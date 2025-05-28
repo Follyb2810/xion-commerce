@@ -62,12 +62,14 @@ const userSchema = new Schema<IUser>(
       documents: [
         {
           type: {
-            type: String, // e.g., 'passport'
+            type: String, 
           },
           url: String,
           uploadedAt: { type: Date, default: Date.now },
         },
       ],
+  
+
       submittedAt: { type: Date, default: null },
       verifiedAt: { type: Date, default: null },
       rejectedReason: { type: String, default: null },

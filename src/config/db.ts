@@ -81,12 +81,13 @@ export const connectDb = async (): Promise<any> => {
       const hashedPassword = await hashPwd("Chaincart123");
 
       const superAdmin = new User({
-        username: "superadmin",
+        username: "superadmin123",
         email,
         password: hashedPassword,
         isVerified: true,
         isEmailVerified: true,
         isAuthenticated: true,
+        walletAddress:"xion15rdntqgppzvgvcngs3e592wt6fhwfmctqxppv2qrhv7s47zxy9ksfe5g9r",
         role: [Roles.ADMIN, Roles.SUPERADMIN, Roles.BUYER, Roles.SELLER],
         profile: {
           name: "Super Admin",
