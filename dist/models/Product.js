@@ -113,29 +113,14 @@ productSchema.pre("findOneAndUpdate", function (next) {
     this.setUpdate(update);
     next();
 });
+productSchema.index({ category: 1 });
+productSchema.index({ isSpecialOffer: 1 });
+productSchema.index({ isBestDeal: 1 });
+productSchema.index({ isTopSelling: 1 });
+productSchema.index({ isActive: 1 });
+productSchema.index({ seller: 1 });
+productSchema.index({ tags: 1 });
+productSchema.index({ title: "text", description: "text" });
+productSchema.index({ category: 1, isActive: 1, stock: 1 });
 exports.default = mongoose_1.default.models.Product ||
     mongoose_1.default.model("Product", productSchema);
-// productSchema.pre("findOneAndUpdate", function (next) {
-//   const update = this.getUpdate() as any;
-//   if (!update) return next();
-//   const data = update.$set || update;
-//   const price = data.price;
-//   const specialPrice = data.specialOfferPrice;
-//   const isSpecialOffer = data.isSpecialOffer;
-//   if (
-//     isSpecialOffer &&
-//     typeof price === "number" &&
-//     typeof specialPrice === "number"
-//   ) {
-//     const discount = ((price - specialPrice) / price) * 100;
-//     data.percentage = Math.round(discount);
-//   } else {
-//     data.percentage = 0;
-//   }
-//   if (update.$set) {
-//     update.$set = data;
-//   } else {
-//     this.setUpdate(data);
-//   }
-//   next();
-// });

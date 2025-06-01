@@ -65,8 +65,9 @@ class CloudinaryService {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const result = yield cloudinary_1.v2.uploader.upload(filePath, {
-                    resource_type: "raw",
+                    resource_type: "auto",
                     format: "pdf",
+                    folder: "documents",
                 });
                 fs_1.default.unlinkSync(filePath);
                 console.log(`✅ Uploaded: ${result.secure_url}`);

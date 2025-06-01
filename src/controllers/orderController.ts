@@ -12,7 +12,6 @@ import { OrderStatus } from "../types/IOrder";
 import CartRepository from "../repositories/CartRepository";
 import { formatProductResponse } from "../middleware/ProductResponse";
 import { ProductAuth } from "../middleware/CheckStock";
-import { XionRequest } from "./xionController";
 
 //!
 export const allOrder = AsyncHandler(
@@ -208,7 +207,8 @@ export const directPurchase = AsyncHandler(
           },
         },
       });
-        if (saveDetailsToProfile) {
+      console.log({ saveDetailsToProfile }, "saveDetailsToProfile");
+      if (saveDetailsToProfile) {
         await updateUserProfileFromOrder(userId!, {
           email,
           fullName,
@@ -216,7 +216,7 @@ export const directPurchase = AsyncHandler(
         });
       }
 
-    return  ResponseHandler(res, 201, "Purchase successful", {
+      return ResponseHandler(res, 201, "Purchase successful", {
         order,
         transactionHash,
         updatedStock: product.stock - quantity,
@@ -225,7 +225,7 @@ export const directPurchase = AsyncHandler(
           price: product.price,
         },
         profileUpdated: saveDetailsToProfile,
-      })
+      });
     } catch (error) {
       console.error("Direct purchase error:", error);
       return ErrorHandler(res, "PURCHASE_FAILED", 500);
@@ -246,10 +246,9 @@ export const getUserPurchaseHistory = AsyncHandler(
     const orders = await OrderRepository.getAll(undefined, filter, [
       {
         path: "items.product",
-        select: "price image_of_land stock",
+        select: "price image_of_land stock coverImage",
       },
     ]);
-    console.log(orders);
     ResponseHandler(res, 200, "User purchase history retrieved", orders);
   }
 );
@@ -263,22 +262,23 @@ const updateUserProfileFromOrder = async (
 ) => {
   try {
     const user = await UserRepository.findById(userId);
+    console.log({ user }, "not seeing you update");
     if (!user) return;
 
     const normalizedEmail = orderDetails.email?.trim().toLowerCase();
     const updates: Partial<IUser> = {};
 
     if (normalizedEmail && normalizedEmail !== user.email) {
-      const emailTaken = await UserRepository.findByEntity({ 
-        email: normalizedEmail 
+      const emailTaken = await UserRepository.findByEntity({
+        email: normalizedEmail,
       });
 
       const isEmailUsedByAnotherUser =
         emailTaken && emailTaken._id.toString() !== user._id.toString();
 
       if (!isEmailUsedByAnotherUser) {
-        updates.email = normalizedEmail;
-        updates.isEmailVerified = false;
+        user.email = normalizedEmail;
+        user.isEmailVerified = false;
       }
     }
 
@@ -287,14 +287,16 @@ const updateUserProfileFromOrder = async (
     }
 
     if (orderDetails.fullName) {
-      updates.profile = {
+      user.profile = {
         ...user.profile,
         name: orderDetails.fullName,
       };
     }
-   
+
+    await user.save();
+
+    await user.save();
   } catch (error) {
     console.error("Profile update from order failed:", error);
-
   }
 };

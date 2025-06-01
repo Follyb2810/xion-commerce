@@ -26,7 +26,7 @@ class Repository<T extends Document> implements IRepository<T> {
     selectField?: string | string[],
     query?: FilterQuery<T>,
     populateFields?: string | string[] | { path: string; select: string }[],
-    limit?: number, 
+    limit?: number,
     skip?: number
   ): Promise<T[]> {
     try {
@@ -39,7 +39,7 @@ class Repository<T extends Document> implements IRepository<T> {
         .find(query || {})
         .sort({ createdAt: -1 })
         .select(fieldsToSelect)
-        .limit(limit || 20) 
+        .limit(limit || 20)
         .skip(skip || 0);
 
       queryBuilder = this.applyPopulate(queryBuilder, populateFields);

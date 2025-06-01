@@ -1,8 +1,10 @@
-@PORT = http://localhost:8080/api
+@PORT = http://localhost:5000/api
+# @PORT = http://localhost:8080/api
 @Json = application/json
 @formUrl =application/x-www-form-urlencoded
 @multiPart = multipart/form-data; boundary=----WebKitFormBoundarym9d0EsD6M8DFTiD8
-@token =Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3Y2RiNmY0ZmZmYTkzZWY2NjVlNGRiYyIsInJvbGVzIjpbImJ1eWVyIiwic2VsbGVyIl0sImlhdCI6MTc0MTU0MDc4MCwiZXhwIjoxNzQxNTQ0MzgwfQ.m8c56tzvbR0bVV7sNdiE2s-U_yZ8U-eQP_WJNctn4E0
+@token =Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4M2MyMTAxZmQwZGJlZDU2NTFiNjUzYiIsInJvbGVzIjpbImJ1eWVyIiwic2VsbGVyIl0sImlhdCI6MTc0ODc3NDk5OSwiZXhwIjoxNzQ4Nzc4NTk5fQ.v41740lxAMg7_MIBR36f97A_4vUJ6HWv_5oe-c1Ts-k
+# @token =Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3Y2RiNmY0ZmZmYTkzZWY2NjVlNGRiYyIsInJvbGVzIjpbImJ1eWVyIiwic2VsbGVyIl0sImlhdCI6MTc0MTU0MDc4MCwiZXhwIjoxNzQxNTQ0MzgwfQ.m8c56tzvbR0bVV7sNdiE2s-U_yZ8U-eQP_WJNctn4E0
 @token1 =Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3Y2RiN2I4Nzc2NTc0YzJkMGI1ZGE3MyIsInJvbGVzIjpbImJ1eWVyIiwic2VsbGVyIl0sImlhdCI6MTc0MTU0MTA1NSwiZXhwIjoxNzQxNTQ0NjU1fQ.HGUtHctXwilo1PAmdQ7F7cdaqiTtK7X5Fv9XuqsfFCE
 
 # Content-Type: multipart/form-data
@@ -148,7 +150,19 @@ GET  {{PORT}}/product
 GET  {{PORT}}/product/67cdbcf40914041dccf1f3e6
 Content-Type: {{Json}}
 Authorization :{{token}}
+### user remove role
+PUT  {{PORT}}/remove-role/683c2101fd0dbed5651b653b
+Content-Type: {{Json}}
+Authorization :{{token}}
+
+
+{
+  "role" : "seller"
+}
+
+
 ###
+
 DELETE   {{PORT}}/product/67cdbcf40914041dccf1f3e6
 Content-Type: {{Json}}
 Authorization :{{token}}

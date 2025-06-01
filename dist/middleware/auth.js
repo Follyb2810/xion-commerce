@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.auth = void 0;
 const jwt_1 = __importDefault(require("../utils/jwt"));
+const jsonwebtoken_1 = require("jsonwebtoken");
 const auth = (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
@@ -19,12 +20,20 @@ const auth = (req, res, next) => {
             return;
         }
         req._id = decode.id;
-        // req.email = decode.email;
         req.roles = decode.roles;
         next();
     }
     catch (error) {
-        res.status(403).json({ message: "Invalid token" });
+        if (error instanceof jsonwebtoken_1.TokenExpiredError) {
+            res.status(401).json({ message: "Token expired" });
+        }
+        else if (error instanceof jsonwebtoken_1.JsonWebTokenError) {
+            res.status(401).json({ message: "Invalid token" });
+        }
+        else {
+            console.error("Unexpected token error:", error);
+            res.status(500).json({ message: "Internal server error" });
+        }
     }
 };
 exports.auth = auth;

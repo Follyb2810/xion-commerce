@@ -108,6 +108,9 @@ const userSchema = new mongoose_1.Schema({
     accountLocked: { type: Boolean, default: false },
     accountUnlockTime: { type: Date, default: null },
 }, { timestamps: true });
+userSchema.index({ role: 1 });
+userSchema.index({ "profile.name": 1 });
+userSchema.index({ email: 1, isVerified: 1 });
 userSchema.pre('save', function (next) {
     if (!this.username && this.email) {
         this.username = this.email;

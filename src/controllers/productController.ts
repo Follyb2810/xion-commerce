@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import AsyncHandler from "express-async-handler";
 import { AuthRequest } from "../middleware/auth";
 import { Roles } from "../types/IUser";
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import CloudinaryService from "../utils/claudinary";
 import { IProduct } from "../types/IProduct";
 import { ErrorHandler, ResponseHandler } from "../utils/ResponseHandler";
@@ -10,28 +10,110 @@ import ProductRepository from "../repositories/ProductRepository";
 import { processImageWithSharp } from "../utils/imageProcessor";
 
 export const allProducts = AsyncHandler(async (req: Request, res: Response) => {
-  const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 10;
-  const skip = (page - 1) * limit;
+  const {
+    category,
+    specialOfferPrice,
+    isSpecialOffer,
+    isBestDeal,
+    isTopSelling,
+    page = "1",
+    limit = "10",
+  } = req.query;
+
+  const pageNumber = Number(page);
+  const limitNumber = Number(limit);
+  const skip = (pageNumber - 1) * limitNumber;
+
+  const query: any = { stock: { $gt: 0 } };
+
+
+  if (category) {
+    const rawCategory =
+      typeof category === "string"
+        ? category
+        : Array.isArray(category)
+        ? category[0]
+        : "";
+
+    if (!mongoose.Types.ObjectId.isValid(rawCategory as string)) {
+
+      return ErrorHandler(res, "Invalid category ID", 400)
+    }
+
+    query.category = rawCategory;
+  }
+
+  if (specialOfferPrice) {
+    const price = Number(specialOfferPrice);
+    if (!isNaN(price)) {
+      query.specialOfferPrice = { $lte: price };
+    }
+  }
+
+  if (isSpecialOffer !== undefined) {
+    query.isSpecialOffer = isSpecialOffer === "true";
+  }
+
+  if (isBestDeal !== undefined) {
+    query.isBestDeal = isBestDeal === "true";
+  }
+
+  if (isTopSelling !== undefined) {
+    query.isTopSelling = isTopSelling === "true";
+  }
 
   const products = await ProductRepository.getAll(
     undefined,
-    { stock: { $gt: 0 } },
-    [{ path: "seller", select: "walletAddress" }],
-    limit,
+    query,
+    [
+      { path: "seller", select: "walletAddress" },
+      { path: "category", select: "name _id" },
+    ],
+    limitNumber,
     skip
   );
 
-  const totalItems = await ProductRepository.countDocuments({
-    stock: { $gt: 0 },
-  });
-  const totalPages = Math.ceil(totalItems / limit);
+  const totalItems = await ProductRepository.countDocuments(query);
+  const totalPages = Math.ceil(totalItems / limitNumber);
 
-  return ResponseHandler(res, 200, "All products retrieved successfully", {
+  return ResponseHandler(res, 200, "Products retrieved successfully", {
     products,
-    pagination: { page, limit, totalPages, totalItems },
+    pagination: {
+      page: pageNumber,
+      limit: limitNumber,
+      totalPages,
+      totalItems,
+    },
   });
 });
+
+
+// export const allProducts = AsyncHandler(async (req: Request, res: Response) => {
+//   const page = Number(req.query.page) || 1;
+//   const limit = Number(req.query.limit) || 10;
+//   const skip = (page - 1) * limit;
+
+//   const products = await ProductRepository.getAll(
+//     undefined,
+//     { stock: { $gt: 0 } },
+//     [
+//       { path: "seller", select: "walletAddress" },
+//       { path: "category", select: "name" },
+//     ],
+//     limit,
+//     skip
+//   );
+
+//   const totalItems = await ProductRepository.countDocuments({
+//     stock: { $gt: 0 },
+//   });
+//   const totalPages = Math.ceil(totalItems / limit);
+
+//   return ResponseHandler(res, 200, "All products retrieved successfully", {
+//     products,
+//     pagination: { page, limit, totalPages, totalItems },
+//   });
+// });
 
 export const getProductById = AsyncHandler(
   async (req: Request, res: Response) => {
@@ -67,7 +149,6 @@ export const createProduct = AsyncHandler(
       isSpecialOffer,
       offerStartDate,
       offerEndDate,
-      
     } = req.body;
 
     // const mappingLocation = JSON.parse(mapping_location);
@@ -83,7 +164,7 @@ export const createProduct = AsyncHandler(
 
     // if (!files.image_of_land || !files.document_of_land) return ErrorHandler(res, "Files are missing",400);
     // if (!files.image_of_land || !files.document_of_land) return ErrorHandler(res, "Files are missing",400);
-    if (!files.coverImage) return ErrorHandler(res, "Files are missing",400);
+    if (!files.coverImage) return ErrorHandler(res, "Files are missing", 400);
     if (
       !files.image_of_land ||
       files.image_of_land.length === 0 ||
@@ -117,9 +198,10 @@ export const createProduct = AsyncHandler(
       files.image_of_land.map((file) => file.path)
     );
 
-    const coverImageUrl = files.coverImage ? await CloudinaryService.uploadSingleImage(files.coverImage[0].path) : null;
+    const coverImageUrl = files.coverImage
+      ? await CloudinaryService.uploadSingleImage(files.coverImage[0].path)
+      : null;
     const imageUrls = imageUploads.map((upload) => upload.secure_url);
-
 
     const newProduct = await ProductRepository.create({
       title,
@@ -135,11 +217,11 @@ export const createProduct = AsyncHandler(
       image_of_land: imageUrls,
       size_of_land,
       document_of_land: documentUrls,
-      coverImage:coverImageUrl?.secure_url || '',
-            beds,
+      coverImage: coverImageUrl?.secure_url || "",
+      beds,
       baths,
       offerStartDate,
-      offerEndDate
+      offerEndDate,
       // document_of_land: documentUpload?.secure_url || "",
     });
     await newProduct.save();
@@ -356,59 +438,109 @@ export const getTopSelling = AsyncHandler(
     });
   }
 );
-export const getFilteredProducts = AsyncHandler(async (req: Request, res: Response) => {
-  const {
-    category,
-    specialOfferPrice,
-    isSpecialOffer,
-    isBestDeal,
-    isTopSelling,
-    page = "1",
-    limit = "10",
-  } = req.query;
+// export const getFilteredProducts = AsyncHandler(
+//   async (req: Request, res: Response) => {
+//     const {
+//       category,
+//       specialOfferPrice,
+//       isSpecialOffer,
+//       isBestDeal,
+//       isTopSelling,
+//       page = "1",
+//       limit = "10",
+//     } = req.query;
 
-  const pageNumber = Number(page);
-  const limitNumber = Number(limit);
-  const skip = (pageNumber - 1) * limitNumber;
+//     const pageNumber = Number(page);
+//     const limitNumber = Number(limit);
+//     const skip = (pageNumber - 1) * limitNumber;
 
-  const query: any = { stock: { $gt: 0 } }; 
+//     const query: any = { stock: { $gt: 0 } };
+//     const  rawCategory =
+//       typeof category === "string"
+//         ? category
+//         : Array.isArray(category)
+//         ? category[0]
+//         : "";
 
-  if (category) query.category = category;
+//     if (!mongoose.Types.ObjectId.isValid(category as string)) {
+//       res.status(400).json({ message: "Invalid category ID" });
+//       return;
+//     }
+//     if (category) query.category = rawCategory;
 
-  if (specialOfferPrice) {
-    const price = Number(specialOfferPrice);
-    if (!isNaN(price)) {
-      query.specialOfferPrice = { $lte: price };
+//     if (specialOfferPrice) {
+//       const price = Number(specialOfferPrice);
+//       if (!isNaN(price)) {
+//         query.specialOfferPrice = { $lte: price };
+//       }
+//     }
+
+//     if (isSpecialOffer !== undefined) {
+//       query.isSpecialOffer = isSpecialOffer === "true";
+//     }
+
+//     if (isBestDeal !== undefined) {
+//       query.isBestDeal = isBestDeal === "true";
+//     }
+
+//     if (isTopSelling !== undefined) {
+//       query.isTopSelling = isTopSelling === "true";
+//     }
+
+//     const products = await ProductRepository.getAll(
+//       undefined,
+//       query,
+//       [{ path: "seller", select: "walletAddress" },{path:'category',select:'name _id'}],
+//       limitNumber,
+//       skip
+//     );
+
+//     const totalItems = await ProductRepository.countDocuments(query);
+//     const totalPages = Math.ceil(totalItems / limitNumber);
+
+//     return ResponseHandler(
+//       res,
+//       200,
+//       "Filtered products retrieved successfully",
+//       {
+//         products,
+//         pagination: {
+//           page: pageNumber,
+//           limit: limitNumber,
+//           totalPages,
+//           totalItems,
+//         },
+//       }
+//     );
+//   }
+// );
+
+export const getProductByCategory = AsyncHandler(
+  async (req: Request, res: Response) => {
+    const rawCategory = req.query.category;
+
+    const category =
+      typeof rawCategory === "string"
+        ? rawCategory
+        : Array.isArray(rawCategory)
+        ? rawCategory[0]
+        : "";
+
+    if (!mongoose.Types.ObjectId.isValid(category as string)) {
+      res.status(400).json({ message: "Invalid category ID" });
+      return;
     }
+
+    const productCategory = await ProductRepository.getAll(
+      undefined,
+      {
+        category: new mongoose.Types.ObjectId(category as string),
+        isActive: true,
+        stock: { $gt: 0 },
+      },
+      "category"
+    );
+
+    ResponseHandler(res, 200, "Product by category", productCategory);
   }
-
-  if (isSpecialOffer !== undefined) {
-    query.isSpecialOffer = isSpecialOffer === "true";
-  }
-
-  if (isBestDeal !== undefined) {
-    query.isBestDeal = isBestDeal === "true";
-  }
-
-  if (isTopSelling !== undefined) {
-    query.isTopSelling = isTopSelling === "true";
-  }
-
-  const products = await ProductRepository.getAll(
-    undefined,
-    query,
-    [{ path: "seller", select: "walletAddress" }],
-    limitNumber,
-    skip
-  );
-
-  const totalItems = await ProductRepository.countDocuments(query);
-  const totalPages = Math.ceil(totalItems / limitNumber);
-
-  return ResponseHandler(res, 200, "Filtered products retrieved successfully", {
-    products,
-    pagination: { page: pageNumber, limit: limitNumber, totalPages, totalItems },
-  });
-});
-
-
+);

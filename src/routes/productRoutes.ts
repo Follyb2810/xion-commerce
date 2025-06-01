@@ -6,10 +6,10 @@ import MulterService from '../utils/multer';
 const router = express.Router();
 
 //? /api/products?page=2&limit=10
-router.get('/', allProducts);
+router.get('/', allProducts); // /api/products/filter?category=683c4a3cff2be395333cc06b&isBestDeal=true&page=2&limit=20
 router.get('/seller_product', auth,allSellerProduct);
 router.get('/:productId', getProductById);
-// router.get('/:productId',auth, getProductById);
+
 
 router.post('/', auth,MulterService.uploadProductFiles(), createProduct);
 router.put('/:productId', auth, updateProduct);

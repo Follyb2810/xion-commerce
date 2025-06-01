@@ -89,6 +89,10 @@ const userSchema = new Schema<IUser>(
   { timestamps: true }
 );
 
+userSchema.index({ role: 1 });          
+userSchema.index({ "profile.name": 1 });
+userSchema.index({ email: 1, isVerified: 1 });
+
 userSchema.pre<IUser>('save', function (next) {
   if (!this.username && this.email) {
     this.username = this.email;

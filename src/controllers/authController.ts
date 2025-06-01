@@ -111,6 +111,10 @@ export const removeUserRole = AsyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     const { role } = req.body;
+    console.log({role})
+    console.log(Object.values(Roles))
+    console.log(Object.values(Roles).includes(role))
+
     if (!Object.values(Roles).includes(role)) {
       return ErrorHandler(res, "INVALID_ROLE", 400);
     }

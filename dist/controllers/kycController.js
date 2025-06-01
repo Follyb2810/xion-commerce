@@ -18,6 +18,7 @@ const ResponseHandler_1 = require("../utils/ResponseHandler");
 const UserRepository_1 = __importDefault(require("../repositories/UserRepository"));
 const claudinary_1 = __importDefault(require("../utils/claudinary"));
 const IUser_1 = require("../types/IUser");
+const IAuthResponse_1 = require("../types/IAuthResponse");
 exports.uploadKycDocuments = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userId = req._id;
     const { documentType } = req.body;
@@ -47,11 +48,14 @@ exports.uploadKycDocuments = (0, express_async_handler_1.default)((req, res) => 
     ];
     user.kyc.submittedAt = new Date();
     user.kyc.status = IUser_1.KYCStatus.PENDING;
-    //Todo 
+    //Todo just give seller role for now becuase i have no verification to use now
+    if (!user.role.includes(IUser_1.Roles.SELLER)) {
+        user.role.push(IUser_1.Roles.SELLER);
+    }
     user.isVerified = true;
     yield user.save();
     return (0, ResponseHandler_1.ResponseHandler)(res, 200, "KYC document uploaded successfully", {
-        kycStatus: user.kyc.status,
+        user: (0, IAuthResponse_1.UserResponse)(user),
     });
 }));
 exports.verifyKYC = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {

@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -12,27 +45,84 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getFilteredProducts = exports.getTopSelling = exports.getBestDeals = exports.getSpecialOffers = exports.allSellerProduct = exports.updateProductDocument = exports.deleteProductImage = exports.updateProductImage = exports.updateProduct = exports.deleteProduct = exports.createProduct = exports.getProductById = exports.allProducts = void 0;
+exports.getProductByCategory = exports.getTopSelling = exports.getBestDeals = exports.getSpecialOffers = exports.allSellerProduct = exports.updateProductDocument = exports.deleteProductImage = exports.updateProductImage = exports.updateProduct = exports.deleteProduct = exports.createProduct = exports.getProductById = exports.allProducts = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const IUser_1 = require("../types/IUser");
-const mongoose_1 = require("mongoose");
+const mongoose_1 = __importStar(require("mongoose"));
 const claudinary_1 = __importDefault(require("../utils/claudinary"));
 const ResponseHandler_1 = require("../utils/ResponseHandler");
 const ProductRepository_1 = __importDefault(require("../repositories/ProductRepository"));
 exports.allProducts = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-    const products = yield ProductRepository_1.default.getAll(undefined, { stock: { $gt: 0 } }, [{ path: "seller", select: "walletAddress" }], limit, skip);
-    const totalItems = yield ProductRepository_1.default.countDocuments({
-        stock: { $gt: 0 },
-    });
-    const totalPages = Math.ceil(totalItems / limit);
-    return (0, ResponseHandler_1.ResponseHandler)(res, 200, "All products retrieved successfully", {
+    const { category, specialOfferPrice, isSpecialOffer, isBestDeal, isTopSelling, page = "1", limit = "10", } = req.query;
+    const pageNumber = Number(page);
+    const limitNumber = Number(limit);
+    const skip = (pageNumber - 1) * limitNumber;
+    const query = { stock: { $gt: 0 } };
+    if (category) {
+        const rawCategory = typeof category === "string"
+            ? category
+            : Array.isArray(category)
+                ? category[0]
+                : "";
+        if (!mongoose_1.default.Types.ObjectId.isValid(rawCategory)) {
+            return (0, ResponseHandler_1.ErrorHandler)(res, "Invalid category ID", 400);
+        }
+        query.category = rawCategory;
+    }
+    if (specialOfferPrice) {
+        const price = Number(specialOfferPrice);
+        if (!isNaN(price)) {
+            query.specialOfferPrice = { $lte: price };
+        }
+    }
+    if (isSpecialOffer !== undefined) {
+        query.isSpecialOffer = isSpecialOffer === "true";
+    }
+    if (isBestDeal !== undefined) {
+        query.isBestDeal = isBestDeal === "true";
+    }
+    if (isTopSelling !== undefined) {
+        query.isTopSelling = isTopSelling === "true";
+    }
+    const products = yield ProductRepository_1.default.getAll(undefined, query, [
+        { path: "seller", select: "walletAddress" },
+        { path: "category", select: "name _id" },
+    ], limitNumber, skip);
+    const totalItems = yield ProductRepository_1.default.countDocuments(query);
+    const totalPages = Math.ceil(totalItems / limitNumber);
+    return (0, ResponseHandler_1.ResponseHandler)(res, 200, "Products retrieved successfully", {
         products,
-        pagination: { page, limit, totalPages, totalItems },
+        pagination: {
+            page: pageNumber,
+            limit: limitNumber,
+            totalPages,
+            totalItems,
+        },
     });
 }));
+// export const allProducts = AsyncHandler(async (req: Request, res: Response) => {
+//   const page = Number(req.query.page) || 1;
+//   const limit = Number(req.query.limit) || 10;
+//   const skip = (page - 1) * limit;
+//   const products = await ProductRepository.getAll(
+//     undefined,
+//     { stock: { $gt: 0 } },
+//     [
+//       { path: "seller", select: "walletAddress" },
+//       { path: "category", select: "name" },
+//     ],
+//     limit,
+//     skip
+//   );
+//   const totalItems = await ProductRepository.countDocuments({
+//     stock: { $gt: 0 },
+//   });
+//   const totalPages = Math.ceil(totalItems / limit);
+//   return ResponseHandler(res, 200, "All products retrieved successfully", {
+//     products,
+//     pagination: { page, limit, totalPages, totalItems },
+//   });
+// });
 exports.getProductById = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const product = yield ProductRepository_1.default.findById(req.params.productId, [
         { path: "seller", select: "walletAddress" },
@@ -75,7 +165,9 @@ exports.createProduct = (0, express_async_handler_1.default)((req, res) => __awa
     const documentUploads = yield claudinary_1.default.uploadMultiplePdfFiles(documentFiles.map((file) => file.path));
     const documentUrls = documentUploads.map((upload) => upload.secure_url);
     const imageUploads = yield claudinary_1.default.uploadMultipleImages(files.image_of_land.map((file) => file.path));
-    const coverImageUrl = files.coverImage ? yield claudinary_1.default.uploadSingleImage(files.coverImage[0].path) : null;
+    const coverImageUrl = files.coverImage
+        ? yield claudinary_1.default.uploadSingleImage(files.coverImage[0].path)
+        : null;
     const imageUrls = imageUploads.map((upload) => upload.secure_url);
     const newProduct = yield ProductRepository_1.default.create({
         title,
@@ -91,11 +183,11 @@ exports.createProduct = (0, express_async_handler_1.default)((req, res) => __awa
         image_of_land: imageUrls,
         size_of_land,
         document_of_land: documentUrls,
-        coverImage: (coverImageUrl === null || coverImageUrl === void 0 ? void 0 : coverImageUrl.secure_url) || '',
+        coverImage: (coverImageUrl === null || coverImageUrl === void 0 ? void 0 : coverImageUrl.secure_url) || "",
         beds,
         baths,
         offerStartDate,
-        offerEndDate
+        offerEndDate,
         // document_of_land: documentUpload?.secure_url || "",
     });
     yield newProduct.save();
@@ -226,34 +318,87 @@ exports.getTopSelling = (0, express_async_handler_1.default)((req, res) => __awa
         products,
     });
 }));
-exports.getFilteredProducts = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { category, specialOfferPrice, isSpecialOffer, isBestDeal, isTopSelling, page = "1", limit = "10", } = req.query;
-    const pageNumber = Number(page);
-    const limitNumber = Number(limit);
-    const skip = (pageNumber - 1) * limitNumber;
-    const query = { stock: { $gt: 0 } };
-    if (category)
-        query.category = category;
-    if (specialOfferPrice) {
-        const price = Number(specialOfferPrice);
-        if (!isNaN(price)) {
-            query.specialOfferPrice = { $lte: price };
-        }
+// export const getFilteredProducts = AsyncHandler(
+//   async (req: Request, res: Response) => {
+//     const {
+//       category,
+//       specialOfferPrice,
+//       isSpecialOffer,
+//       isBestDeal,
+//       isTopSelling,
+//       page = "1",
+//       limit = "10",
+//     } = req.query;
+//     const pageNumber = Number(page);
+//     const limitNumber = Number(limit);
+//     const skip = (pageNumber - 1) * limitNumber;
+//     const query: any = { stock: { $gt: 0 } };
+//     const  rawCategory =
+//       typeof category === "string"
+//         ? category
+//         : Array.isArray(category)
+//         ? category[0]
+//         : "";
+//     if (!mongoose.Types.ObjectId.isValid(category as string)) {
+//       res.status(400).json({ message: "Invalid category ID" });
+//       return;
+//     }
+//     if (category) query.category = rawCategory;
+//     if (specialOfferPrice) {
+//       const price = Number(specialOfferPrice);
+//       if (!isNaN(price)) {
+//         query.specialOfferPrice = { $lte: price };
+//       }
+//     }
+//     if (isSpecialOffer !== undefined) {
+//       query.isSpecialOffer = isSpecialOffer === "true";
+//     }
+//     if (isBestDeal !== undefined) {
+//       query.isBestDeal = isBestDeal === "true";
+//     }
+//     if (isTopSelling !== undefined) {
+//       query.isTopSelling = isTopSelling === "true";
+//     }
+//     const products = await ProductRepository.getAll(
+//       undefined,
+//       query,
+//       [{ path: "seller", select: "walletAddress" },{path:'category',select:'name _id'}],
+//       limitNumber,
+//       skip
+//     );
+//     const totalItems = await ProductRepository.countDocuments(query);
+//     const totalPages = Math.ceil(totalItems / limitNumber);
+//     return ResponseHandler(
+//       res,
+//       200,
+//       "Filtered products retrieved successfully",
+//       {
+//         products,
+//         pagination: {
+//           page: pageNumber,
+//           limit: limitNumber,
+//           totalPages,
+//           totalItems,
+//         },
+//       }
+//     );
+//   }
+// );
+exports.getProductByCategory = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const rawCategory = req.query.category;
+    const category = typeof rawCategory === "string"
+        ? rawCategory
+        : Array.isArray(rawCategory)
+            ? rawCategory[0]
+            : "";
+    if (!mongoose_1.default.Types.ObjectId.isValid(category)) {
+        res.status(400).json({ message: "Invalid category ID" });
+        return;
     }
-    if (isSpecialOffer !== undefined) {
-        query.isSpecialOffer = isSpecialOffer === "true";
-    }
-    if (isBestDeal !== undefined) {
-        query.isBestDeal = isBestDeal === "true";
-    }
-    if (isTopSelling !== undefined) {
-        query.isTopSelling = isTopSelling === "true";
-    }
-    const products = yield ProductRepository_1.default.getAll(undefined, query, [{ path: "seller", select: "walletAddress" }], limitNumber, skip);
-    const totalItems = yield ProductRepository_1.default.countDocuments(query);
-    const totalPages = Math.ceil(totalItems / limitNumber);
-    return (0, ResponseHandler_1.ResponseHandler)(res, 200, "Filtered products retrieved successfully", {
-        products,
-        pagination: { page: pageNumber, limit: limitNumber, totalPages, totalItems },
-    });
+    const productCategory = yield ProductRepository_1.default.getAll(undefined, {
+        category: new mongoose_1.default.Types.ObjectId(category),
+        isActive: true,
+        stock: { $gt: 0 },
+    }, "category");
+    (0, ResponseHandler_1.ResponseHandler)(res, 200, "Product by category", productCategory);
 }));

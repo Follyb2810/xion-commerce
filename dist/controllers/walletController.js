@@ -53,7 +53,7 @@ exports.authWallet = (0, express_async_handler_1.default)((req, res) => __awaite
     const result = (0, IAuthResponse_1.UserResponse)(user);
     (0, ResponseHandler_1.ResponseHandler)(res, 200, "User Successfull login or Register", {
         accessToken,
-        result,
+        user: result,
     });
 }));
 exports.updateProfile = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -99,5 +99,5 @@ exports.updateProfile = (0, express_async_handler_1.default)((req, res) => __awa
         user.profile.avatar = avatar;
     yield user.save();
     const result = (0, IAuthResponse_1.UserResponse)(user);
-    res.status(200).json({ message: "Profile updated successfully", result });
+    res.status(200).json({ message: "Profile updated successfully", user: result });
 }));

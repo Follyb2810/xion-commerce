@@ -1,0 +1,19 @@
+// cache.ts
+import NodeCache from "node-cache";
+const cache = new NodeCache({ stdTTL: 300 }); // 5 minutes TTL
+export default cache;
+// product.controller.ts or product.route.ts
+import cache from "./cache";
+
+app.get("/api/products", async (req, res) => {
+  const key = "seller_products";
+  const cachedData = cache.get(key);
+
+  if (cachedData) {
+    return res.json({ fromCache: true, data: cachedData });
+  }
+
+  const products = await ProductModel.find({}); // DB query
+  cache.set(key, products);
+  return res.json({ fromCache: false, data: products });
+});

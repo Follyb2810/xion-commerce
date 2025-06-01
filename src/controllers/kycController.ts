@@ -4,7 +4,8 @@ import { Request, Response } from "express";
 import { ErrorHandler, ResponseHandler } from "../utils/ResponseHandler";
 import UserRepository from "../repositories/UserRepository";
 import CloudinaryService from "../utils/claudinary";
-import { KYCStatus } from "../types/IUser";
+import { KYCStatus, Roles } from "../types/IUser";
+import { UserResponse } from "../types/IAuthResponse";
 
 export const uploadKycDocuments = AsyncHandler(async (req: AuthRequest, res: Response) => {
   const userId = req._id;
@@ -38,13 +39,17 @@ export const uploadKycDocuments = AsyncHandler(async (req: AuthRequest, res: Res
 
   user.kyc.submittedAt = new Date();
   user.kyc.status = KYCStatus.PENDING;
-  //Todo 
+
+  //Todo just give seller role for now becuase i have no verification to use now
+  if(!user.role.includes(Roles.SELLER)){
+    user.role.push(Roles.SELLER);
+  }
   user.isVerified = true;
 
   await user.save();
 
   return ResponseHandler(res, 200, "KYC document uploaded successfully", {
-    kycStatus: user.kyc.status,
+          user: UserResponse(user),
   });
 });
 

@@ -51,7 +51,7 @@ export const authWallet = AsyncHandler(
     const result = UserResponse(user);
     ResponseHandler(res, 200, "User Successfull login or Register", {
       accessToken,
-      result,
+      user:result,
     });
   }
 );
@@ -107,6 +107,6 @@ export const updateProfile = AsyncHandler(
 
     await user.save();
     const result = UserResponse(user);
-    res.status(200).json({ message: "Profile updated successfully", result });
+    res.status(200).json({ message: "Profile updated successfully",user: result });
   }
 );

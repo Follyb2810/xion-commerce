@@ -94,6 +94,9 @@ exports.verifyUser = (0, express_async_handler_1.default)((req, res) => __awaite
 exports.removeUserRole = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
     const { role } = req.body;
+    console.log({ role });
+    console.log(Object.values(IUser_1.Roles));
+    console.log(Object.values(IUser_1.Roles).includes(role));
     if (!Object.values(IUser_1.Roles).includes(role)) {
         return (0, ResponseHandler_1.ErrorHandler)(res, "INVALID_ROLE", 400);
     }

@@ -51,8 +51,9 @@ class CloudinaryService {
   static async uploadPdfFile(filePath: string): Promise<UploadApiResponse> {
     try {
       const result = await cloudinary.uploader.upload(filePath, {
-        resource_type: "raw",
+        resource_type: "auto",
         format: "pdf",
+        folder: "documents",
       });
       fs.unlinkSync(filePath);
       console.log(`✅ Uploaded: ${result.secure_url}`);
@@ -81,9 +82,9 @@ class CloudinaryService {
           }
 
           const result = await cloudinary.uploader.upload(filePath, {
-            resource_type: "auto", 
+            resource_type: "auto",
             format: "pdf",
-            folder: "documents", 
+            folder: "documents",
           });
 
           fs.unlinkSync(filePath);
@@ -98,51 +99,51 @@ class CloudinaryService {
     }
   }
 
-  static async uploadMultipleImages(filePaths: string[]): Promise<UploadApiResponse[]> {
-  try {
-    const maxSize = 10 * 1024 * 1024;
-    const uploads: UploadApiResponse[] = [];
+  static async uploadMultipleImages(
+    filePaths: string[]
+  ): Promise<UploadApiResponse[]> {
+    try {
+      const maxSize = 10 * 1024 * 1024;
+      const uploads: UploadApiResponse[] = [];
 
-    for (const filePath of filePaths) {
-      const absolutePath = path.resolve(filePath);
+      for (const filePath of filePaths) {
+        const absolutePath = path.resolve(filePath);
 
-      if (!fs.existsSync(absolutePath)) {
-        console.warn(`⚠️ File not found: ${absolutePath}`);
-        continue;
+        if (!fs.existsSync(absolutePath)) {
+          console.warn(`⚠️ File not found: ${absolutePath}`);
+          continue;
+        }
+
+        let fileSize;
+        try {
+          fileSize = fs.statSync(absolutePath).size;
+        } catch (err) {
+          if (err instanceof Error)
+            console.warn(`❌ Can't stat file ${absolutePath}:`, err.message);
+          continue;
+        }
+
+        if (fileSize > maxSize) {
+          console.warn(`❌ File too large: ${path.basename(absolutePath)}`);
+          continue;
+        }
+
+        const result = await cloudinary.uploader.upload(absolutePath, {
+          resource_type: "image",
+          // folder: "images",
+        });
+
+        fs.unlinkSync(absolutePath);
+        console.log(`✅ Uploaded: ${result.secure_url}`);
+        uploads.push(result);
       }
 
-      let fileSize;
-      try {
-        fileSize = fs.statSync(absolutePath).size;
-      } catch (err) {
-        if(err  instanceof Error)
-        console.warn(`❌ Can't stat file ${absolutePath}:`, err.message);
-        continue;
-      }
-
-      if (fileSize > maxSize) {
-        console.warn(`❌ File too large: ${path.basename(absolutePath)}`);
-        continue;
-      }
-
-      const result = await cloudinary.uploader.upload(absolutePath, {
-        resource_type: "image",
-        // folder: "images",
-      });
-
-      fs.unlinkSync(absolutePath);
-      console.log(`✅ Uploaded: ${result.secure_url}`);
-      uploads.push(result);
+      return uploads;
+    } catch (error) {
+      console.error("❌ Error uploading multiple images:", error);
+      throw error;
     }
-
-    return uploads;
-  } catch (error) {
-    console.error("❌ Error uploading multiple images:", error);
-    throw error;
   }
-}
-
-
 
   static async removeSingleImage(publicId: string): Promise<any> {
     try {

@@ -150,6 +150,7 @@ exports.directPurchase = (0, express_async_handler_1.default)((req, res) => __aw
                 },
             },
         });
+        console.log({ saveDetailsToProfile }, "saveDetailsToProfile");
         if (saveDetailsToProfile) {
             yield updateUserProfileFromOrder(userId, {
                 email,
@@ -183,36 +184,38 @@ exports.getUserPurchaseHistory = (0, express_async_handler_1.default)((req, res)
     const orders = yield OrderRepository_1.default.getAll(undefined, filter, [
         {
             path: "items.product",
-            select: "price image_of_land stock",
+            select: "price image_of_land stock coverImage",
         },
     ]);
-    console.log(orders);
     (0, ResponseHandler_1.ResponseHandler)(res, 200, "User purchase history retrieved", orders);
 }));
 const updateUserProfileFromOrder = (userId, orderDetails) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
         const user = yield UserRepository_1.default.findById(userId);
+        console.log({ user }, "not seeing you update");
         if (!user)
             return;
         const normalizedEmail = (_a = orderDetails.email) === null || _a === void 0 ? void 0 : _a.trim().toLowerCase();
         const updates = {};
         if (normalizedEmail && normalizedEmail !== user.email) {
             const emailTaken = yield UserRepository_1.default.findByEntity({
-                email: normalizedEmail
+                email: normalizedEmail,
             });
             const isEmailUsedByAnotherUser = emailTaken && emailTaken._id.toString() !== user._id.toString();
             if (!isEmailUsedByAnotherUser) {
-                updates.email = normalizedEmail;
-                updates.isEmailVerified = false;
+                user.email = normalizedEmail;
+                user.isEmailVerified = false;
             }
         }
         if (orderDetails.phoneNumber) {
             user.phoneNumber = orderDetails.phoneNumber;
         }
         if (orderDetails.fullName) {
-            updates.profile = Object.assign(Object.assign({}, user.profile), { name: orderDetails.fullName });
+            user.profile = Object.assign(Object.assign({}, user.profile), { name: orderDetails.fullName });
         }
+        yield user.save();
+        yield user.save();
     }
     catch (error) {
         console.error("Profile update from order failed:", error);

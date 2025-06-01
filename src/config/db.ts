@@ -66,7 +66,9 @@ export const connectDb = async (): Promise<any> => {
 //     }
 
 // Seed Categories (If Empty)
-     
+    //  await User.collection.dropIndex("walletAddress_1")
+    //  console.log('success')
+
     const existingCategories = await Category.find();
     if (existingCategories.length === 0) {
       await Category.insertMany(categoriesSeed);

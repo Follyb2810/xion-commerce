@@ -70,6 +70,8 @@ const connectDb = () => __awaiter(void 0, void 0, void 0, function* () {
         //       }
         //     }
         // Seed Categories (If Empty)
+        //  await User.collection.dropIndex("walletAddress_1")
+        //  console.log('success')
         const existingCategories = yield Category_1.Category.find();
         if (existingCategories.length === 0) {
             yield Category_1.Category.insertMany(categorySeed_1.categoriesSeed);

@@ -25,5 +25,9 @@ const orderSchema: Schema = new Schema<IOrder>(
   { timestamps: true }
 );
 
-export default mongoose.models.Order || mongoose.model<IOrder>("Order", orderSchema);
+orderSchema.index({ buyer: 1 });               
+orderSchema.index({ status: 1 });              
+orderSchema.index({ buyer: 1, status: 1 });    
+orderSchema.index({ "payment.txHash": 1 });    
 
+export default mongoose.models.Order || mongoose.model<IOrder>("Order", orderSchema);

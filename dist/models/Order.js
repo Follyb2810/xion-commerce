@@ -55,4 +55,8 @@ const orderSchema = new mongoose_1.Schema({
         txHash: String,
     },
 }, { timestamps: true });
+orderSchema.index({ buyer: 1 });
+orderSchema.index({ status: 1 });
+orderSchema.index({ buyer: 1, status: 1 });
+orderSchema.index({ "payment.txHash": 1 });
 exports.default = mongoose_1.default.models.Order || mongoose_1.default.model("Order", orderSchema);

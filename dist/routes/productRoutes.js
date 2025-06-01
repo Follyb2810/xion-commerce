@@ -9,10 +9,9 @@ const auth_1 = require("../middleware/auth");
 const multer_1 = __importDefault(require("../utils/multer"));
 const router = express_1.default.Router();
 //? /api/products?page=2&limit=10
-router.get('/', productController_1.allProducts);
+router.get('/', productController_1.allProducts); // /api/products/filter?category=683c4a3cff2be395333cc06b&isBestDeal=true&page=2&limit=20
 router.get('/seller_product', auth_1.auth, productController_1.allSellerProduct);
 router.get('/:productId', productController_1.getProductById);
-// router.get('/:productId',auth, getProductById);
 router.post('/', auth_1.auth, multer_1.default.uploadProductFiles(), productController_1.createProduct);
 router.put('/:productId', auth_1.auth, productController_1.updateProduct);
 // router.put('/:productId', auth, MulterService.uploadProductFiles(), updateProduct);
