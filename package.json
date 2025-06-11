@@ -10,7 +10,8 @@
     "serve": "tsc-node src/app.ts",
     "server": "nodemon dist/app.js",
     "start": "node  dist/app.js",
-    "vercel-build": "npm run build"
+    "vercel-build": "npm run build",
+    "create-feature": "ts-node src/create-feature.ts"
   },
   "keywords": [],
   "author": "",
@@ -40,6 +41,7 @@
     "mongoose": "^8.11.0",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
+    "node-cache": "^5.1.2",
     "node-cron": "^3.0.3",
     "nodemailer": "^6.10.0",
     "nodemon": "^3.1.9",

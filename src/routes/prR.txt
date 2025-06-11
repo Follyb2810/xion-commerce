@@ -1,0 +1,29 @@
+import express from 'express';
+import {
+  allProducts,
+  allSellerProduct,
+  createProduct,
+  deleteProduct,
+  getProductById,
+  updateProduct,
+  updateProductDocument,
+  updateProductImage,
+} from '../controllers/productController';
+import { auth } from '../middleware/auth';
+import MulterService from '../utils/multer';
+import checkCache from '../middleware/cacheMiddleware';
+
+const router = express.Router();
+
+//? /api/products?page=2&limit=10
+router.get('/', checkCache(), allProducts); // uses req.originalUrl as key
+router.get('/seller_product', auth, checkCache(), allSellerProduct);
+router.get('/:productId', checkCache((req) => `product:${req.params.productId}`), getProductById);
+
+router.post('/', auth, MulterService.uploadProductFiles(), createProduct);
+router.put('/:productId', auth, updateProduct);
+router.put('/:productId', auth, MulterService.uploadSingle('image_of_land'), updateProductImage);
+router.put('/:productId', auth, MulterService.uploadSingle('document_of_land'), updateProductDocument);
+router.delete('/:productId', auth, deleteProduct);
+
+export default router;

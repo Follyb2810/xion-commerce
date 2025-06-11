@@ -10,6 +10,7 @@ import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 export interface AuthRequest extends Request {
   _id?: string;
   roles?: string[];
+  cacheKey?:string
 }
 
 export const auth: RequestHandler = (

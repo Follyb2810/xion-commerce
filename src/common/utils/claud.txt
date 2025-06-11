@@ -1,0 +1,725 @@
+//? use
+// import express, { Request, Response } from "express";
+// import MulterService from "./MulterService";
+// import CloudinaryService from "./CloudinaryService";
+
+// const router = express.Router();
+
+// // Upload Single Image
+// router.post("/upload-single", MulterService.uploadSingle("image"), async (req: Request, res: Response) => {
+//   try {
+//     if (!req.file) {
+//       return res.status(400).json({ message: "No file uploaded" });
+//     }
+
+//     const uploadResult = await CloudinaryService.uploadSingleImage(req.file.path);
+//     res.json({ message: "File uploaded successfully", url: uploadResult.secure_url });
+//   } catch (error) {
+//     res.status(500).json({ message: "Upload failed", error });
+//   }
+// });
+
+// // Upload Multiple Images
+// router.post("/upload-multiple", MulterService.uploadMultiple("images", 5), async (req: Request, res: Response) => {
+//   try {
+//     if (!req.files || (req.files as Express.Multer.File[]).length === 0) {
+//       return res.status(400).json({ message: "No files uploaded" });
+//     }
+
+//     const files = req.files as Express.Multer.File[];
+//     const uploadResults = await CloudinaryService.uploadMultipleImages(files.map(file => file.path));
+
+//     res.json({
+//       message: "Files uploaded successfully",
+//       urls: uploadResults.map(result => result.secure_url),
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: "Upload failed", error });
+//   }
+// });
+
+// // Delete Single Image
+// router.delete("/delete-single/:publicId", async (req: Request, res: Response) => {
+//   try {
+//     const { publicId } = req.params;
+//     await CloudinaryService.removeSingleImage(publicId);
+//     res.json({ message: "Image deleted successfully" });
+//   } catch (error) {
+//     res.status(500).json({ message: "Deletion failed", error });
+//   }
+// });
+
+// // Delete Multiple Images
+// router.delete("/delete-multiple", async (req: Request, res: Response) => {
+//   try {
+//     const { publicIds } = req.body;
+//     if (!Array.isArray(publicIds)) {
+//       return res.status(400).json({ message: "Invalid request format" });
+//     }
+
+//     await CloudinaryService.removeMultipleImages(publicIds);
+//     res.json({ message: "Images deleted successfully" });
+//   } catch (error) {
+//     res.status(500).json({ message: "Deletion failed", error });
+//   }
+// });
+
+// export default router;
+
+// import { v2 as cloudinary, UploadApiResponse, UploadApiErrorResponse, DeleteApiResponse } from 'cloudinary';
+
+// cloudinary.config({
+//     cloud_name: 'your_cloud_name',
+//     api_key: 'your_api_key',
+//     api_secret: 'your_api_secret',
+// });
+
+// class CloudinaryService {
+//     static async uploadSingleImage(imageUrl: string): Promise<UploadApiResponse> {
+//         try {
+//             const result = await cloudinary.uploader.upload(imageUrl);
+//             console.log(`✅ Uploaded: ${result.secure_url}`);
+//             return result;
+//         } catch (error) {
+//             console.error("❌ Error uploading image:", error);
+//             throw error;
+//         }
+//     }
+
+//     static async uploadManyImages(imageUrls: string[]): Promise<UploadApiResponse[]> {
+//         try {
+//             const results: UploadApiResponse[] = [];
+
+//             for (const image of imageUrls) {
+//                 const result = await cloudinary.uploader.upload(image);
+//                 results.push(result);
+//                 console.log(`✅ Uploaded: ${result.secure_url}`);
+//             }
+
+//             return results;
+//         } catch (error) {
+//             console.error("❌ Error uploading multiple images:", error);
+//             throw error;
+//         }
+//     }
+
+//     static async removeSingleImage(imagePublicId: string): Promise<DeleteApiResponse> {
+//         try {
+//             const result = await cloudinary.uploader.destroy(imagePublicId);
+//             console.log(`✅ Deleted: ${imagePublicId}`);
+//             return result;
+//         } catch (error) {
+//             console.error("❌ Error deleting image:", error);
+//             throw new Error("Internal Server Error (Cloudinary)");
+//         }
+//     }
+
+//     static async removeMultipleImages(publicIds: string[]): Promise<DeleteApiResponse> {
+//         try {
+//             const result = await cloudinary.api.delete_resources(publicIds);
+//             console.log(`✅ Deleted multiple images: ${publicIds.join(', ')}`);
+//             return result;
+//         } catch (error) {
+//             console.error("❌ Error deleting multiple images:", error);
+//             throw new Error("Internal Server Error (Cloudinary)");
+//         }
+//     }
+// }
+
+// export default CloudinaryService;
+// Upload a single image
+// await CloudinaryService.uploadSingleImage("https://example.com/image.jpg");
+
+// // Upload multiple images
+// await CloudinaryService.uploadManyImages(["https://example.com/img1.jpg", "https://example.com/img2.jpg"]);
+
+// // Delete a single image
+// await CloudinaryService.removeSingleImage("your_public_id");
+
+// // Delete multiple images
+// await CloudinaryService.removeMultipleImages(["public_id_1", "public_id_2"]);
+// import CloudinaryService from "./CloudinaryService";  // Import the service
+// import ProductModel from "./models/ProductModel"; // Example Mongoose model
+
+// async function deleteProduct(productId: string) {
+//     try {
+//         // Fetch the product details
+//         const product = await ProductModel.findById(productId);
+//         if (!product) {
+//             throw new Error("Product not found");
+//         }
+
+//         // Extract public IDs of images
+//         const publicIds = product.images; // Assuming `images` is an array of public IDs
+
+//         // Delete images from Cloudinary
+//         if (publicIds.length > 0) {
+//             await CloudinaryService.removeMultipleImages(publicIds);
+//         }
+
+//         // Delete product from database
+//         await ProductModel.findByIdAndDelete(productId);
+
+//         console.log("✅ Product and associated images deleted successfully");
+//     } catch (error) {
+//         console.error("❌ Error deleting product:", error);
+//         throw error;
+//     }
+// }
+
+import multer from "multer";
+import path from "path";
+
+class MulterService {
+  private static storage = multer.diskStorage({
+    destination: "uploads/",
+    filename: (req, file, cb) => {
+      cb(null, file.fieldname + "-" + Date.now() + path.extname(file.originalname));
+    },
+  });
+
+  private static fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+    const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "application/pdf"];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Invalid file type. Only JPEG, PNG, JPG, and PDF are allowed."));
+    }
+  };
+
+  public static uploadProductFiles() {
+    return multer({
+      storage: this.storage,
+      fileFilter: this.fileFilter,
+    }).fields([
+      { name: "image_of_land", maxCount: 1 },
+      { name: "document_of_land", maxCount: 1 },
+    ]);
+  }
+}
+
+export default MulterService;
+
+import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
+import fs from "fs";
+
+cloudinary.config({
+  cloud_name: "your_cloud_name",
+  api_key: "your_api_key",
+  api_secret: "your_api_secret",
+});
+
+class CloudinaryService {
+  static async uploadFile(filePath: string): Promise<UploadApiResponse> {
+    try {
+      const result = await cloudinary.uploader.upload(filePath, { resource_type: "auto" });
+      fs.unlinkSync(filePath); // Delete file from local storage after upload
+      console.log(`✅ Uploaded: ${result.secure_url}`);
+      return result;
+    } catch (error) {
+      console.error("❌ Error uploading file:", error);
+      throw error;
+    }
+  }
+
+  static async removeFile(publicId: string): Promise<any> {
+    try {
+      const result = await cloudinary.uploader.destroy(publicId);
+      return result;
+    } catch (error) {
+      console.error("❌ Error deleting file:", error);
+      throw new Error("Internal Server Error (Cloudinary)");
+    }
+  }
+}
+
+export default CloudinaryService;
+import express, { Request, Response } from "express";
+import MulterService from "./MulterService";
+import CloudinaryService from "./CloudinaryService";
+import ProductModel from "./models/Product"; // Import Product schema
+
+const router = express.Router();
+
+// Upload Product with Multiple Files
+router.post("/upload-product", MulterService.uploadProductFiles(), async (req: Request, res: Response) => {
+  try {
+    if (!req.files) {
+      return res.status(400).json({ message: "No files uploaded" });
+    }
+
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+    // Upload files to Cloudinary
+    const imageUpload = files.image_of_land ? await CloudinaryService.uploadFile(files.image_of_land[0].path) : null;
+    const documentUpload = files.document_of_land ? await CloudinaryService.uploadFile(files.document_of_land[0].path) : null;
+
+    // Create Product entry in DB
+    const newProduct = new ProductModel({
+      title: req.body.title,
+      description: req.body.description,
+      price: req.body.price,
+      category: req.body.category,
+      seller: req.body.seller,
+      stock: req.body.stock,
+      address: req.body.address,
+      mapping_location: req.body.mapping_location,
+      image_of_land: imageUpload?.secure_url || "",
+      size_of_land: req.body.size_of_land,
+      document_of_land: documentUpload?.secure_url || "",
+    });
+
+    await newProduct.save();
+
+    res.json({
+      message: "Product uploaded successfully",
+      product: newProduct,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Upload failed", error });
+  }
+});
+
+export default router;
+<form id="productForm" enctype="multipart/form-data">
+  <input type="text" name="title" placeholder="Title" required />
+  <input type="number" name="price" placeholder="Price" required />
+  <input type="text" name="category" placeholder="Category" required />
+  <input type="text" name="seller" placeholder="Seller ID" required />
+  <input type="text" name="address" placeholder="Address" required />
+  <input type="text" name="mapping_location" placeholder="Location" required />
+  <input type="text" name="size_of_land" placeholder="Size of Land" required />
+  
+  <label>Land Image:</label>
+  <input type="file" name="image_of_land" accept="image/*" required />
+  
+  <label>Land Document (PDF):</label>
+  <input type="file" name="document_of_land" accept="application/pdf" required />
+
+  <button type="submit">Upload Product</button>
+</form>
+
+<script>
+document.getElementById("productForm").addEventListener("submit", async function (event) {
+  event.preventDefault();
+  const formData = new FormData(this);
+  const response = await fetch("http://localhost:5000/api/products/upload-product", {
+    method: "POST",
+    body: formData,
+  });
+  const result = await response.json();
+  console.log(result);
+});
+</script>
+import multer from "multer";
+import path from "path";
+
+class MulterService {
+  private static storage = multer.diskStorage({
+    destination: "uploads/",
+    filename: (req, file, cb) => {
+      cb(null, file.fieldname + "-" + Date.now() + path.extname(file.originalname));
+    },
+  });
+
+  private static fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+    const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "application/pdf"];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Invalid file type. Only JPEG, PNG, JPG, and PDF are allowed."));
+    }
+  };
+
+  // Generic Multer middleware (accepts any file field)
+  public static uploadFiles() {
+    return multer({
+      storage: this.storage,
+      fileFilter: this.fileFilter,
+    }).any(); // Accepts any field names dynamically
+  }
+}
+
+export default MulterService;
+
+import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
+import fs from "fs";
+
+cloudinary.config({
+  cloud_name: "your_cloud_name",
+  api_key: "your_api_key",
+  api_secret: "your_api_secret",
+});
+
+class CloudinaryService {
+  static async uploadFile(filePath: string): Promise<UploadApiResponse> {
+    try {
+      const result = await cloudinary.uploader.upload(filePath, { resource_type: "auto" });
+      fs.unlinkSync(filePath); // Delete local file after upload
+      console.log(`✅ Uploaded: ${result.secure_url}`);
+      return result;
+    } catch (error) {
+      console.error("❌ Error uploading file:", error);
+      throw error;
+    }
+  }
+}
+
+export default CloudinaryService;
+import express, { Request, Response } from "express";
+import MulterService from "./MulterService";
+import CloudinaryService from "./CloudinaryService";
+import ProductModel from "./models/Product"; // Import Product schema
+
+const router = express.Router();
+
+// Upload Product with Any Files
+router.post("/upload-product", MulterService.uploadFiles(), async (req: Request, res: Response) => {
+  try {
+    if (!req.files || !(req.files as Express.Multer.File[]).length) {
+      return res.status(400).json({ message: "No files uploaded" });
+    }
+
+    const files = req.files as Express.Multer.File[];
+    const uploadedFiles: Record<string, string> = {}; // Store Cloudinary URLs
+
+    // Upload files dynamically
+    for (const file of files) {
+      const uploadResult = await CloudinaryService.uploadFile(file.path);
+      uploadedFiles[file.fieldname] = uploadResult.secure_url; // Store using field name
+    }
+
+    // Create Product with uploaded files
+    const newProduct = new ProductModel({
+      title: req.body.title,
+      description: req.body.description,
+      price: req.body.price,
+      category: req.body.category,
+      seller: req.body.seller,
+      stock: req.body.stock,
+      address: req.body.address,
+      mapping_location: req.body.mapping_location,
+      image_of_land: uploadedFiles["image_of_land"] || "",
+      size_of_land: req.body.size_of_land,
+      document_of_land: uploadedFiles["document_of_land"] || "",
+    });
+
+    await newProduct.save();
+
+    res.json({
+      message: "Product uploaded successfully",
+      product: newProduct,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Upload failed", error });
+  }
+});
+
+export default router;
+import mongoose, { Schema, Document } from "mongoose";
+
+export interface IPayment extends Document {
+  user: mongoose.Types.ObjectId;
+  product: mongoose.Types.ObjectId;
+  amount: number;
+  status: "pending" | "successful" | "failed";
+  transactionId: string;
+  paymentGateway: string;
+  createdAt: Date;
+}
+
+const PaymentSchema = new Schema<IPayment>(
+  {
+    user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    product: { type: Schema.Types.ObjectId, ref: "Product", required: true },
+    amount: { type: Number, required: true },
+    status: { type: String, enum: ["pending", "successful", "failed"], default: "pending" },
+    transactionId: { type: String, unique: true, required: true },
+    paymentGateway: { type: String, required: true },
+  },
+  { timestamps: true }
+);
+
+export default mongoose.model<IPayment>("Payment", PaymentSchema);
+import mongoose, { Schema, Document } from "mongoose";
+
+export interface IPayment extends Document {
+  user: mongoose.Types.ObjectId;
+  product: mongoose.Types.ObjectId;
+  amount: number;
+  status: "pending" | "successful" | "failed";
+  transactionId: string;
+  paymentGateway: string;
+  createdAt: Date;
+}
+
+const PaymentSchema = new Schema<IPayment>(
+  {
+    user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    product: { type: Schema.Types.ObjectId, ref: "Product", required: true },
+    amount: { type: Number, required: true },
+    status: { type: String, enum: ["pending", "successful", "failed"], default: "pending" },
+    transactionId: { type: String, unique: true, required: true },
+    paymentGateway: { type: String, required: true },
+  },
+  { timestamps: true }
+);
+
+export default mongoose.model<IPayment>("Payment", PaymentSchema);
+import { Request, Response } from "express";
+import Stripe from "stripe";
+import Payment from "../models/Payment";
+
+const stripe = new Stripe("your_stripe_secret_key", { apiVersion: "2023-08-16" });
+
+export const processPayment = async (req: Request, res: Response) => {
+  try {
+    const { userId, productId, amount, token } = req.body;
+
+    // Create Stripe charge
+    const charge = await stripe.charges.create({
+      amount: amount * 100, // Convert to cents
+      currency: "usd",
+      source: token,
+      description: `Payment for product ${productId}`,
+    });
+
+    // Save payment details
+    const payment = await Payment.create({
+      user: userId,
+      product: productId,
+      amount,
+      status: "successful",
+      transactionId: charge.id,
+      paymentGateway: "stripe",
+    });
+
+    res.status(201).json({ message: "Payment successful", payment });
+  } catch (error) {
+    res.status(500).json({ message: "Payment failed", error });
+  }
+};
+
+export const stripeWebhook = async (req: Request, res: Response) => {
+  const sig = req.headers["stripe-signature"];
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig!, "your_webhook_secret");
+
+    if (event.type === "charge.succeeded") {
+      const charge = event.data.object;
+      
+      await Payment.findOneAndUpdate(
+        { transactionId: charge.id },
+        { status: "successful" }
+      );
+    }
+    res.json({ received: true });
+  } catch (err) {
+    res.status(400).send(`Webhook error: ${err.message}`);
+  }
+};
+
+npm install paypal-rest-sdk
+import paypal from "paypal-rest-sdk";
+
+paypal.configure({
+  mode: "sandbox", // Change to 'live' for production
+  client_id: "your_paypal_client_id",
+  client_secret: "your_paypal_client_secret",
+});
+
+export default paypal;
+import { Request, Response } from "express";
+import paypal from "../config/paypalConfig";
+import Payment from "../models/Payment";
+
+export const processPayPalPayment = async (req: Request, res: Response) => {
+  const { userId, productId, amount } = req.body;
+
+  const createPaymentJson = {
+    intent: "sale",
+    payer: { payment_method: "paypal" },
+    redirect_urls: {
+      return_url: "http://localhost:5000/api/payment/success",
+      cancel_url: "http://localhost:5000/api/payment/cancel",
+    },
+    transactions: [
+      {
+        amount: { currency: "USD", total: amount.toFixed(2) },
+        description: `Payment for product ${productId}`,
+      },
+    ],
+  };
+
+  paypal.payment.create(createPaymentJson, async (error, payment) => {
+    if (error) {
+      return res.status(500).json({ message: "Payment failed", error });
+    }
+
+    for (let link of payment.links) {
+      if (link.rel === "approval_url") {
+        // Store payment as pending
+        await Payment.create({
+          user: userId,
+          product: productId,
+          amount,
+          status: "pending",
+          transactionId: payment.id,
+          paymentGateway: "paypal",
+        });
+
+        return res.json({ approval_url: link.href });
+      }
+    }
+  });
+};
+export const paypalSuccess = async (req: Request, res: Response) => {
+  const { paymentId, PayerID } = req.query;
+
+  paypal.payment.execute(
+    paymentId as string,
+    { payer_id: PayerID as string },
+    async (error, payment) => {
+      if (error) {
+        return res.status(500).json({ message: "Payment execution failed", error });
+      }
+
+      await Payment.findOneAndUpdate(
+        { transactionId: payment.id },
+        { status: "successful" }
+      );
+
+      res.json({ message: "Payment successful", payment });
+    }
+  );
+};
+
+export const paypalCancel = (req: Request, res: Response) => {
+  res.json({ message: "Payment cancelled" });
+};
+
+npm install flutterwave-node-v3
+flutterwaveConfig.ts:
+import Flutterwave from "flutterwave-node-v3";
+
+const flw = new Flutterwave("your_public_key", "your_secret_key");
+
+export default flw;
+import { Request, Response } from "express";
+import flw from "../config/flutterwaveConfig";
+import Payment from "../models/Payment";
+
+export const processFlutterwavePayment = async (req: Request, res: Response) => {
+  const { userId, productId, amount, email, currency = "USD" } = req.body;
+
+  try {
+    const transaction = await flw.Payment.initiate({
+      tx_ref: `tx-${Date.now()}`,
+      amount,
+      currency,
+      redirect_url: "http://localhost:5000/api/payment/flutterwave-callback",
+      payment_options: "card,banktransfer",
+      customer: { email },
+      customizations: { title: "Product Payment", description: "Pay for a product" },
+    });
+
+    if (transaction.status === "success") {
+      await Payment.create({
+        user: userId,
+        product: productId,
+        amount,
+        status: "pending",
+        transactionId: transaction.data.tx_ref,
+        paymentGateway: "flutterwave",
+      });
+
+      res.json({ checkout_url: transaction.data.link });
+    } else {
+      res.status(400).json({ message: "Payment initiation failed" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Payment failed", error });
+  }
+};
+export const flutterwaveWebhook = async (req: Request, res: Response) => {
+  const event = req.body;
+
+  if (event.status === "successful") {
+    await Payment.findOneAndUpdate(
+      { transactionId: event.tx_ref },
+      { status: "successful" }
+    );
+  }
+
+  res.sendStatus(200);
+};
+
+  //   static async uploadMultiplePdfFiles(filePaths: string[]): Promise<UploadApiResponse[]> {
+  //   try {
+  //     const uploads = await Promise.all(
+  //       filePaths.map(async (filePath) => {
+  //         const timestamp = Math.floor(Date.now() / 1000);
+  //         const signatureString = `format=pdf&timestamp=${timestamp}`;
+  //         const signature = crypto
+  //           .createHash('sha1')
+  //           .update(signatureString + process.env.CLOUDINARY_API_SECRET!)
+  //           .digest('hex');
+
+  //         const result = await cloudinary.uploader.upload(filePath, {
+  //           format: 'pdf',
+  //           resource_type: 'auto',
+  //           timestamp,
+  //           signature,
+  //           api_key: process.env.CLOUDINARY_API_KEY!,
+  //         });
+
+  //         fs.unlinkSync(filePath);
+  //         return result;
+  //       })
+  //     );
+
+  //     return uploads;
+  //     // const results: UploadApiResponse[] = [];
+  //     // for (const filePath of filePaths) {
+  //     //   const fileSize = fs.statSync(filePath).size;
+  //     //   const maxSize = 10 * 1024 * 1024;
+  //     //   if (fileSize > maxSize) {
+  //     //     throw new Error(`File ${path.basename(filePath)} exceeds 10MB limit`);
+  //     //   }
+
+  //     //   const result = await cloudinary.uploader.upload(filePath, {
+  //     //     resource_type: "raw",
+  //     //     format: "pdf",
+  //     //   });
+  //     //   results.push(result);
+  //     //   fs.unlinkSync(filePath);
+  //     //   console.log(`✅ Uploaded PDF: ${result.secure_url}`);
+  //     // }
+  //     // return results;
+  //   } catch (error) {
+  //     console.error("❌ Error uploading multiple PDFs:", error);
+  //     throw error;
+  //   }
+  // }
+
+
+    // static async uploadMultipleImages(
+  //   filePaths: string[]
+  // ): Promise<UploadApiResponse[]> {
+  //   console.log("uploadMultipleImages");
+  //   try {
+  //     const results: UploadApiResponse[] = [];
+  //     for (const filePath of filePaths) {
+  //       const result = await cloudinary.uploader.upload(filePath);
+  //       results.push(result);
+  //       fs.unlinkSync(filePath);
+  //       console.log(`✅ Uploaded: ${result.secure_url}`);
+  //     }
+  //     return results;
+  //   } catch (error) {
+  //     console.error("❌ Error uploading multiple images:", error);
+  //     throw error;
+  //   }
+  // }

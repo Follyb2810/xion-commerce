@@ -1,0 +1,24 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const user_controller_1 = require("./user.controller");
+const auth_1 = require("./../../middleware/auth");
+const multer_1 = __importDefault(require("./../../utils/multer"));
+const kyc_controller_1 = require("./kyc.controller");
+const router = express_1.default.Router();
+router.get("/user", user_controller_1.allUser);
+router.post("/register", user_controller_1.register);
+router.post("/login", user_controller_1.login);
+router.get("/profile", auth_1.auth, user_controller_1.UserProfile);
+router.get("/check_out/:walletAddress", auth_1.auth, user_controller_1.getCheckoutData);
+router.get("/verify/:id", auth_1.auth, user_controller_1.verifyUser);
+router.put("/remove-role/:id", auth_1.auth, user_controller_1.removeUserRole);
+router.get("/user/:id", auth_1.auth, user_controller_1.SingleUser);
+router.patch("/profile", auth_1.auth, user_controller_1.updateUserProfile);
+router.post('/kyc/upload', auth_1.auth, multer_1.default.uploadSingle('kycDocuments'), kyc_controller_1.uploadKycDocuments);
+router.get('/kyc/status', auth_1.auth, kyc_controller_1.getKycStatus);
+router.post('/kyc/admin/update', auth_1.auth, kyc_controller_1.verifyKYC);
+exports.default = router;

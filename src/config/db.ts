@@ -65,16 +65,14 @@ export const connectDb = async (): Promise<any> => {
 //       }
 //     }
 
-// Seed Categories (If Empty)
-    //  await User.collection.dropIndex("walletAddress_1")
-    //  console.log('success')
+//      await User.collection.dropIndex("walletAddress_1")
+//      console.log('success')
 
     const existingCategories = await Category.find();
     if (existingCategories.length === 0) {
       await Category.insertMany(categoriesSeed);
       console.log("Categories seeded successfully.");
     }
-//  Seed Super Admin (If Not Exists)
     
     const email = "superadmin@chaincart.com";
     const existingUser = await User.findOne({ email });

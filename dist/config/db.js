@@ -69,15 +69,13 @@ const connectDb = () => __awaiter(void 0, void 0, void 0, function* () {
         //         console.error("Error dropping index mnemonic_1:", err.message);
         //       }
         //     }
-        // Seed Categories (If Empty)
-        //  await User.collection.dropIndex("walletAddress_1")
-        //  console.log('success')
+        //      await User.collection.dropIndex("walletAddress_1")
+        //      console.log('success')
         const existingCategories = yield Category_1.Category.find();
         if (existingCategories.length === 0) {
             yield Category_1.Category.insertMany(categorySeed_1.categoriesSeed);
             console.log("Categories seeded successfully.");
         }
-        //  Seed Super Admin (If Not Exists)
         const email = "superadmin@chaincart.com";
         const existingUser = yield User_1.default.findOne({ email });
         if (!existingUser) {
