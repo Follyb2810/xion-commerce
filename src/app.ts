@@ -20,6 +20,12 @@ import http from "http";
 import { Server, Socket } from "socket.io";
 import { allowedOrigins } from "./config/allowedOrigins";
 
+//? modular
+// import setupRoutes from "./features";
+//? modular
+// import {initializeSocket} from './config/socketConfig'
+
+
 interface IUserSocket extends Socket {
   data: {
     username: string;
@@ -31,6 +37,10 @@ const port = process.env.PORT || 8080;
 const app: Application = express();
 
 const server = http.createServer(app);
+//? mdodula
+// const server = http.createServer(app);
+//? mdodula
+// initializeSocket(server)
 
 const io = new Server(server, {
   allowEIO3: true,
@@ -95,6 +105,10 @@ app.get("/cosmos", (req: Request, res: Response) => {
 app.get("/", (req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
+
+//?  modular
+// setupRoutes(app);
+
 
 app.use("/api", authRoute);
 app.use("/api", walletRoute);
