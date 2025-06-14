@@ -1,6 +1,5 @@
 import { Server, Socket } from "socket.io";
 import { Server as HttpServer } from "http";
-import "./../utils/taccStatusUpdater";
 import { allowedOrigins } from "./allowedOrigins";
 const Apikey = process.env.Apikey;
 let io: Server | null = null;

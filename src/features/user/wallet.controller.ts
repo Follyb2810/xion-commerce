@@ -26,11 +26,15 @@ export const authWallet = AsyncHandler(
         newUser._id,
         newUser.role
       );
-
-      return ResponseHandler(res, 201, "User registered successfully", {
+      const result = UserResponse(newUser);
+      ResponseHandler(res, 200, "User Successfull login or Register", {
         accessToken,
-        user: UserResponse(newUser),
+        user: result,
       });
+      // return ResponseHandler(res, 201, "User registered successfully", {
+      //   accessToken,
+      //   user: UserResponse(newUser),
+      // });
     } catch (error: any) {
       if (error.message === "USER_EXIST") {
         return ErrorHandler(res, "USER_EXIST", 400);

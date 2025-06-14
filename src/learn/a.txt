@@ -1,0 +1,78 @@
+const emailToSocketId = new Map()
+io.on("connection", (socket: IUserSocket) => {
+  console.log("A user connected:", socket.id);
+  socket.data.username = "New User";
+
+  //? listen to message
+  socket.on("connect_error", (err) => {
+    console.error("Connection Error:", err);
+  });
+  // Notify others (excluding sender) that a new user joined
+  socket.broadcast.emit("broadcast", {
+    system: "User",
+    message: `${socket.id} with ${socket.data.username} has joined the chat`,
+  });
+  // Broadcast to all users (including sender)
+  io.emit("broadcast", {
+    system: "User",
+    message: `${socket.id} with ${socket.data.username} has join the chat`,
+  });
+  
+  // Listen for a "message" event from a user
+  socket.on("message", (data) => {
+    console.log(`Message from ${socket.id}:`, data);
+
+    // Broadcast the message to everyone (including sender)
+    io.emit("message", { sender: socket.id, text: data });
+  });
+
+  // Listen for a "privateMessage" event from a user
+  socket.on("privateMessage", ({ receiverId, message }) => {
+    console.log(
+      `Private message from ${socket.id} to ${receiverId}: ${message}`
+    );
+
+    // Send the message only to the specified receiver
+    io.to(receiverId).emit("privateMessage", {
+      sender: socket.id,
+      text: message,
+    });
+  });
+  //! message to all
+  io.emit("chat_message", {
+    system: "User",
+    message: `${socket.id} with ${socket.data.username} has join the chat`,
+  });
+  
+  // ! chat between buyer and seller
+  socket.on("chat_mesaage", (msg:string) => {
+    io.emit('chat_mesaage',{user:socket.data.username,msg})
+  });
+  //! typing betweeen buyer and seller
+  socket.on('typing',()=>{
+    //? messae to the buyer or seller
+    socket.broadcast.emit('typing',socket.data.username)
+  })
+  socket.on('stop_typing',()=>{
+    //? messae to the buyer or seller
+    socket.broadcast.emit('stop_typing',socket.data.username)
+  })
+  // Send a welcome message ONLY to the connected user
+  socket.emit("welcome", { message: `Welcome, ${socket.id}!` });
+
+  // Send a message to EVERYONE, including the sender
+  io.emit("broadcast", { message: `${socket.id} joined the chat` });
+
+  // Send a message to EVERYONE EXCEPT the sender
+  socket.broadcast.emit("broadcast", { message: `User ${socket.id} joined` });
+  socket.on('room:join',(data)=>{
+    console.log(data)
+    emailToSocketId.set(data,socket.id)
+    socket.to(socket.id).emit('room:join',data)
+    
+  })
+  socket.on("disconnect", () => {
+    io.emit('disconnect',{system:'chat disonneeted',message:`${socket.data.username} has lefthe chatt`})
+    console.log("User disconnected:", socket.id);
+  });
+});
