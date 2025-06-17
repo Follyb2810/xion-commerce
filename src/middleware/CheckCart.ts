@@ -1,11 +1,11 @@
 import { NextFunction, RequestHandler, Response } from "express";
-import { IUser } from "../types/IUser";
+import { IUser } from "./../common/types/IUser";
 import { AuthRequest } from "./auth";
 import { Types } from "mongoose";
-import { ErrorHandler } from "../utils/ResponseHandler";
-import ProductRepository from "../repositories/ProductRepository";
+import { ErrorHandler } from "./../common/exceptions/ResponseHandler";
+import ProductRepository from "./../features/product/product.repository";
 import { ProductAuth } from "./CheckStock";
-import CartRepository from "../repositories/CartRepository";
+import CartRepository from "./../features/cart/cart.repository";
 
 export const CheckCart: RequestHandler = async (
   req: ProductAuth,

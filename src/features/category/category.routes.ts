@@ -1,7 +1,11 @@
 import { Router } from "express";
 import { allCategory } from "./category.controller";
+import checkCache from "../../middleware/checkCache";
 
-const router = Router()
+const router = Router();
 
-router.route('/').get(allCategory)
+router.route("/").get(
+  checkCache((req) => `categories`),
+  allCategory
+);
 export default router;

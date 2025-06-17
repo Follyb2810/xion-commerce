@@ -4,13 +4,13 @@ import express, {
   NextFunction,
   RequestHandler,
 } from "express";
-import JwtService from "../utils/jwt";
+import JwtService from "./../common/libs/jwt";
 import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 
 export interface AuthRequest extends Request {
   _id?: string;
   roles?: string[];
-  cacheKey?:string
+
 }
 
 export const auth: RequestHandler = (
@@ -37,7 +37,7 @@ export const auth: RequestHandler = (
     req._id = decode.id;
     req.roles = decode.roles;
 
-    next(); 
+    next();
   } catch (error) {
     if (error instanceof TokenExpiredError) {
       res.status(401).json({ message: "Token expired" });

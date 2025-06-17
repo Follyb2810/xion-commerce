@@ -220,15 +220,15 @@ class ProductService {
 
     if (updateData.mapping_location) {
       let mappingLocation: IMapingLocation;
-      if(typeof updateData.mapping_location === 'object'){
+      if (typeof updateData.mapping_location === "object") {
         mappingLocation = updateData.mapping_location;
-      }else{
+      } else {
         mappingLocation = JSON.parse(updateData.mapping_location);
       }
       if (!mappingLocation.lat || !mappingLocation.lng) {
         throw new Error("INVALID_MAP_LOCATION");
       }
-      updateData.mapping_location= mappingLocation;
+      updateData.mapping_location = mappingLocation;
     }
 
     const updatedProduct = await ProductRepository.updateById(

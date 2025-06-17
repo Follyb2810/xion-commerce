@@ -12,6 +12,7 @@ import { allowedOrigins } from "./config/allowedOrigins";
 import setupRoutes from "./features";
 import { globalError } from "./middleware/globalError";
 import { initializeSocket } from "./config/socketConfig";
+import { cache } from "./common/libs/cache";
 
 const port = process.env.PORT || 8080;
 const app: Application = express();

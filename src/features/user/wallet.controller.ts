@@ -3,7 +3,10 @@ import { Request, Response } from "express";
 import AsyncHandler from "express-async-handler";
 import { UserResponse } from "./user.mapper";
 import { AuthRequest } from "./../../middleware/auth";
-import { ErrorHandler, ResponseHandler } from "./../../utils/ResponseHandler";
+import {
+  ErrorHandler,
+  ResponseHandler,
+} from "./../../common/exceptions/ResponseHandler";
 import {
   ErrorKey,
   ErrorKeyOf,
@@ -71,23 +74,7 @@ export const authUpdateWallet = AsyncHandler(
         updatedUser
       );
     } catch (error: any) {
-      //   const errorType = error.message as ErrorKeyOf
-
-      // console.error("Update profile error:", error);
-      // switch (error.message) {
-      //   case "Unauthorized":
-      //     return ErrorHandler(res, "Unauthorized", 401);
-      //   case "User not found":
-      //     return ErrorHandler(res, "User not found", 404);
-      //   case "You cannot change your email":
-      //     return ErrorHandler(res, "Email cannot be changed", 400);
-      //   case "Wallet address is already in use":
-      //     return ErrorHandler(res, "Wallet address already in use", 409);
-      //   case "You must add an email before changing your wallet address":
-      //     return ErrorHandler(res, "Add email before changing wallet", 400);
-      //   default:
-      //     return ErrorHandler(res, "Failed to update profile", 500);
-      // }
+      
       let errorKey: ErrorKey = "SERVER_ERROR";
       let statusCode = 500;
       if (error instanceof Error) {

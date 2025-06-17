@@ -2,8 +2,13 @@ import { Request, Response } from "express";
 import AsyncHandler from "express-async-handler";
 import { UserResponse } from "./user.mapper";
 import { AuthRequest } from "./../../middleware/auth";
-import { ErrorHandler, ResponseHandler } from "./../../utils/ResponseHandler";
+import {
+  ErrorHandler,
+  ResponseHandler,
+} from "./../../common/exceptions/ResponseHandler";
 import UserService from "./user.service";
+import { CacheRequest } from "../../middleware/checkCache";
+import { cache } from "../../common/libs/cache";
 
 export const register = AsyncHandler(
   async (req: Request, res: Response): Promise<void> => {
@@ -20,10 +25,15 @@ export const register = AsyncHandler(
         newUser.role
       );
 
-      return ResponseHandler(res, 201, "User Successfull login or Register with wallet", {
-        accessToken,
-        user: UserResponse(newUser),
-      });
+      return ResponseHandler(
+        res,
+        201,
+        "User Successfull login or Register with wallet",
+        {
+          accessToken,
+          user: UserResponse(newUser),
+        }
+      );
     } catch (error: any) {
       if (error.message === "USER_EXIST") {
         return ErrorHandler(res, "USER_EXIST", 400);
@@ -62,14 +72,21 @@ export const login = AsyncHandler(
 );
 
 export const SingleUser = AsyncHandler(
-  async (req: Request, res: Response): Promise<void> => {
+  async (req: CacheRequest, res: Response): Promise<void> => {
     const { id } = req.params;
     const user = await UserService.getUserById(id);
 
     if (!user) {
       return ErrorHandler(res, "USER_NOTFOUND", 404);
     }
-
+    if (req.cacheKey && user) {
+      const cacheData = JSON.parse(JSON.stringify({user}));
+      const success = cache.set(req.cacheKey, cacheData, 600);
+      console.log(
+        `Cache set for key ${req.cacheKey}:`,
+        success ? "Success" : "Failed"
+      );
+    }
     return ResponseHandler(res, 200, "User retrieved successfully", {
       user: UserResponse(user),
     });
@@ -113,14 +130,21 @@ export const removeUserRole = AsyncHandler(
 );
 
 export const UserProfile = AsyncHandler(
-  async (req: AuthRequest, res: Response): Promise<void> => {
+  async (req: CacheRequest, res: Response): Promise<void> => {
     const id = req._id;
     const user = await UserService.getUserById(id!);
 
     if (!user) {
       return ErrorHandler(res, "USER_NOTFOUND", 404);
     }
-
+    if (req.cacheKey && user) {
+      const cacheData = JSON.parse(JSON.stringify({user}));
+      const success = cache.set(req.cacheKey, cacheData, 600);
+      console.log(
+        `Cache set for key ${req.cacheKey}:`,
+        success ? "Success" : "Failed"
+      );
+    }
     return ResponseHandler(res, 200, "User profile retrieved successfully", {
       user: UserResponse(user),
     });
@@ -128,8 +152,16 @@ export const UserProfile = AsyncHandler(
 );
 
 export const allUser = AsyncHandler(
-  async (req: AuthRequest, res: Response): Promise<void> => {
+  async (req: CacheRequest, res: Response): Promise<void> => {
     const users = await UserService.getAllUsers();
+    if (req.cacheKey && users) {
+      const cacheData = JSON.parse(JSON.stringify({users}));
+      const success = cache.set(req.cacheKey, cacheData, 600);
+      console.log(
+        `Cache set for key ${req.cacheKey}:`,
+        success ? "Success" : "Failed"
+      );
+    }
     return ResponseHandler(res, 200, "All users retrieved successfully", {
       users: users.map(UserResponse),
     });
@@ -143,6 +175,11 @@ export const updateUserProfile = AsyncHandler(
 
     try {
       await UserService.updateUserProfile(id!, { email, phoneNumber, name });
+      cache.keys().forEach((key) => {
+        if (key.startsWith('user')) {
+          cache.del(key);
+        }
+      });
       return ResponseHandler(res, 200, "User profile updated successfully");
     } catch (error: any) {
       if (error.message === "NO_DATA_PROVIDED") {
@@ -160,7 +197,7 @@ export const updateUserProfile = AsyncHandler(
 );
 
 export const getCheckoutData = AsyncHandler(
-  async (req: AuthRequest, res: Response) => {
+  async (req: CacheRequest, res: Response) => {
     const { walletAddress } = req.params;
 
     if (!walletAddress) {
@@ -169,6 +206,14 @@ export const getCheckoutData = AsyncHandler(
     }
 
     const user = await UserService.getUserByWalletAddress(walletAddress);
+    if (req.cacheKey && user) {
+      const cacheData = JSON.parse(JSON.stringify({user}));
+      const success = cache.set(req.cacheKey, cacheData, 600);
+      console.log(
+        `Cache set for key ${req.cacheKey}:`,
+        success ? "Success" : "Failed"
+      );
+    }
     return ResponseHandler(res, 200, "User data retrieved successfully", {
       user,
     });

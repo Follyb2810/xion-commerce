@@ -1,7 +1,7 @@
 import UserRepository from "./user.repository";
 import { IUser, Roles, KYCStatus } from "./../../common/types/IUser";
-import { hashPwd, ComparePassword } from "./../../utils/bcrypt";
-import JwtService from "./../../utils/jwt";
+import { hashPwd, ComparePassword } from "./../../common/libs/bcrypt";
+import JwtService from "./../../common/libs/jwt";
 import crypto from "crypto";
 
 type IUserWallet = {

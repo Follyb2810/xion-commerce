@@ -8,6 +8,7 @@ import productRoute from "./product/product.routes";
 import xionRoute from "./xion/xion.routes";
 import walletRoute from "./user/wallet.routes";
 import orderRoute from "./order/order.routes";
+import deployRoute from "./deploy/deploy.routes";
 
 export default (app: Application) => {
   app.use("/api", userRoute);
@@ -19,6 +20,7 @@ export default (app: Application) => {
   app.use("/api/xion", xionRoute);
   app.use("/api/admin", adminRoute);
   app.use("/api/chat", chatRoute);
+  app.use("/api/deploy", deployRoute);
 };
 
 // import  fs from "fs";

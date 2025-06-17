@@ -30,7 +30,6 @@ class JwtService {
     try {
       return sign(payload, this.getSecret(), { expiresIn });
     } catch (error) {
-      console.error("Error signing token:", error);
       throw error;
     }
   }
@@ -39,7 +38,6 @@ class JwtService {
     try {
       return verify(token, this.getSecret()) as T;
     } catch (error) {
-      console.error("Error verifying token:", error);
       throw error;
     }
   }

@@ -184,8 +184,7 @@ class OrderService {
         profileUpdated: saveDetailsToProfile,
       };
     } catch (error) {
-      console.error("Direct purchase error:", error);
-      throw new Error("PURCHASE_FAILED");
+      throw new Error("PURCHASE_FAILED" + error);
     }
   }
 

@@ -20,9 +20,6 @@ class XionWallet {
       const hash = crypto.createHash("sha256").update(email).digest("hex");
       const entropy = Buffer.from(hash, "hex").subarray(0, 16);
       return entropyToMnemonic(entropy, wordlist);
-      // return bip39.entropyToMnemonic(); // 32 hex chars = 16 bytes entropy
-    // return bip39.entropyToMnemonic(hash.slice(0, 32)); // 32 hex chars = 16 bytes entropy
-    // return entropyToMnemonic(hash.slice(0, 32), wordlist); // 32 hex chars = 16 bytes entropy
   }
 
   static async generateAddressFromEmail(email: string) {
@@ -46,6 +43,7 @@ class XionWallet {
       const [firstAccount] = await wallet.getAccounts();
       return firstAccount?.address ?? null;
   }
+  
 
   static async generateXionWallet() {
       const wallet = await DirectSecp256k1HdWallet.generate(24, { prefix: "xion" });

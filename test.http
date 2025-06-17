@@ -145,9 +145,15 @@ Content-Type: {{Json}}
 	"walletAddress":"follyb28100000"
 }
 ###
+GET  {{PORT}}/category
+###
 GET  {{PORT}}/product
 ###
-GET  {{PORT}}/product/67cdbcf40914041dccf1f3e6
+GET  {{PORT}}/product?category=683eb6103da2b19f5066e093
+###
+GET  {{PORT}}/product/test
+###
+GET  {{PORT}}/product/683ebc3e3da2b19f5066e0fc
 Content-Type: {{Json}}
 Authorization :{{token}}
 ### user remove role

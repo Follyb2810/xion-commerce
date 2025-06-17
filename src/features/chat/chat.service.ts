@@ -8,11 +8,9 @@ interface CustomSocket extends Socket {
 let io = getIO();
 
 io.on('connection', (socket: CustomSocket) => {
-    console.log('User connected:', socket.id);
 
     socket.on('join', (userId: string) => {
         socket.userId = userId;
-        console.log(`${userId} joined the chat`);
     });
 
     socket.on('sendMessage', async ({ sender, receiver, message }) => {
@@ -34,11 +32,9 @@ io.on('connection', (socket: CustomSocket) => {
             await chat.save();
             io.to(receiver).emit('receiveMessage', newMessage);
         } catch (error) {
-            console.error('Error sending message:', error);
         }
     });
 
     socket.on('disconnect', () => {
-        console.log('User disconnected:', socket.id);
     });
 });

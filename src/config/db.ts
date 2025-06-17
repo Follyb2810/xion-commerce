@@ -1,12 +1,12 @@
 import mongoose from "mongoose";
-import { Category } from "../models/Category";
+import { Category } from "./../features/category/category.model";
 import { categoriesSeed } from "../seed/categorySeed";
-import User from "../models/User";
-import Product from "../models/Product";
-import Order from "../models/Order";
-import Cart from "../models/Cart";
-import { hashPwd } from "../utils/bcrypt";
-import { Roles } from "../types/IUser";
+import User from "./../features/user/user.model";
+import Product from "./../features/product/product.model";
+import Order from "./../features/cart/cart.model";
+import Cart from "./../features/cart/cart.model";
+import { hashPwd } from "./../common/libs/bcrypt";
+import { Roles } from "./../common/types/IUser";
 
 export const connectDb = async (): Promise<any> => {
   try {

@@ -1,0 +1,76 @@
+// export const getFilteredProducts = AsyncHandler(
+//   async (req: Request, res: Response) => {
+//     const {
+//       category,
+//       specialOfferPrice,
+//       isSpecialOffer,
+//       isBestDeal,
+//       isTopSelling,
+//       page = "1",
+//       limit = "10",
+//     } = req.query;
+
+//     const pageNumber = Number(page);
+//     const limitNumber = Number(limit);
+//     const skip = (pageNumber - 1) * limitNumber;
+
+//     const query: any = { stock: { $gt: 0 } };
+//     const  rawCategory =
+//       typeof category === "string"
+//         ? category
+//         : Array.isArray(category)
+//         ? category[0]
+//         : "";
+
+//     if (!mongoose.Types.ObjectId.isValid(category as string)) {
+//       res.status(400).json({ message: "Invalid category ID" });
+//       return;
+//     }
+//     if (category) query.category = rawCategory;
+
+//     if (specialOfferPrice) {
+//       const price = Number(specialOfferPrice);
+//       if (!isNaN(price)) {
+//         query.specialOfferPrice = { $lte: price };
+//       }
+//     }
+
+//     if (isSpecialOffer !== undefined) {
+//       query.isSpecialOffer = isSpecialOffer === "true";
+//     }
+
+//     if (isBestDeal !== undefined) {
+//       query.isBestDeal = isBestDeal === "true";
+//     }
+
+//     if (isTopSelling !== undefined) {
+//       query.isTopSelling = isTopSelling === "true";
+//     }
+
+//     const products = await ProductRepository.getAll(
+//       undefined,
+//       query,
+//       [{ path: "seller", select: "walletAddress" },{path:'category',select:'name _id'}],
+//       limitNumber,
+//       skip
+//     );
+
+//     const totalItems = await ProductRepository.countDocuments(query);
+//     const totalPages = Math.ceil(totalItems / limitNumber);
+
+//     return ResponseHandler(
+//       res,
+//       200,
+//       "Filtered products retrieved successfully",
+//       {
+//         products,
+//         pagination: {
+//           page: pageNumber,
+//           limit: limitNumber,
+//           totalPages,
+//           totalItems,
+//         },
+//       }
+//     );
+//   }
+// );

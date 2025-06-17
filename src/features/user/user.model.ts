@@ -1,6 +1,6 @@
-import mongoose, { Schema } from 'mongoose';
-import { IUser, Roles, KYCStatus } from './../../common/types/IUser';
-import { encryptKey } from './../../utils/hash';
+import mongoose, { Schema } from "mongoose";
+import { IUser, Roles, KYCStatus } from "./../../common/types/IUser";
+import { encryptKey } from "./../../common/utils/hash";
 
 const userSchema = new Schema<IUser>(
   {
@@ -38,7 +38,7 @@ const userSchema = new Schema<IUser>(
       bio: { type: String, default: null },
       avatar: {
         type: String,
-        default: 'https://via.placeholder.com/150',
+        default: "https://via.placeholder.com/150",
       },
     },
 
@@ -47,7 +47,7 @@ const userSchema = new Schema<IUser>(
     history: [
       {
         paid: { type: Number, default: 0 },
-        item: { type: Schema.Types.ObjectId, ref: 'Product' },
+        item: { type: Schema.Types.ObjectId, ref: "Product" },
         timestamp: { type: Date, default: Date.now },
         transactionHash: { type: String, default: null },
       },
@@ -62,13 +62,12 @@ const userSchema = new Schema<IUser>(
       documents: [
         {
           type: {
-            type: String, 
+            type: String,
           },
           url: String,
           uploadedAt: { type: Date, default: Date.now },
         },
       ],
-  
 
       submittedAt: { type: Date, default: null },
       verifiedAt: { type: Date, default: null },
@@ -89,18 +88,19 @@ const userSchema = new Schema<IUser>(
   { timestamps: true }
 );
 
-userSchema.index({ role: 1 });          
+userSchema.index({ role: 1 });
 userSchema.index({ "profile.name": 1 });
 userSchema.index({ email: 1, isVerified: 1 });
 
-userSchema.pre<IUser>('save', function (next) {
+userSchema.pre<IUser>("save", function (next) {
   if (!this.username && this.email) {
     this.username = this.email;
   }
-  if (this.isModified('mnemonic') && this.mnemonic && this._id) {
+  if (this.isModified("mnemonic") && this.mnemonic && this._id) {
     this.mnemonic = encryptKey(this.mnemonic, this._id.toString());
   }
   next();
 });
 
-export default mongoose.models.User || mongoose.model<IUser>('User', userSchema);
+export default mongoose.models.User ||
+  mongoose.model<IUser>("User", userSchema);
