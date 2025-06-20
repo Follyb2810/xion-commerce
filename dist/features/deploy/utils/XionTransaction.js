@@ -17,13 +17,14 @@ const XionConnect_1 = __importDefault(require("./XionConnect"));
 const XionUtils_1 = require("./XionUtils");
 const fs_1 = require("fs");
 const path_1 = __importDefault(require("path"));
-const WASM_FILE_PATH = path_1.default.join(__dirname, "../artifacts/escrow_contract.wasm");
+const WASM_FILE_PATH = path_1.default.join(__dirname, "../../../../public/artifacts/escrow_contract.wasm");
+console.log(WASM_FILE_PATH);
 class XionTransaction {
     constructor(config) {
         var _a, _b, _c;
         this.xionConnect = (_a = config === null || config === void 0 ? void 0 : config.xionConnect) !== null && _a !== void 0 ? _a : new XionConnect_1.default();
         this.xionWallet = (_b = config === null || config === void 0 ? void 0 : config.xionWallet) !== null && _b !== void 0 ? _b : new XionWallet_1.default();
-        // this.contractAddress = config?.contractAddress ?? process.env.CONTRACT_ADDRESS; 
+        // this.contractAddress = config?.contractAddress ?? process.env.CONTRACT_ADDRESS;
         this.adminAddress =
             (_c = config === null || config === void 0 ? void 0 : config.adminAddress) !== null && _c !== void 0 ? _c : process.env.ADMIN_ADDRESS;
         if (!this.adminAddress) {
@@ -82,6 +83,7 @@ class XionTransaction {
                 throw new Error(`Invalid sender address: ${senderAddress}`);
             }
             const wasmCode = wasmFilePath ? wasmFilePath : (0, fs_1.readFileSync)(WASM_FILE_PATH);
+            console.log(`📄 Contract size: ${wasmCode.length} bytes`);
             if (!wasmCode || wasmCode.length === 0) {
                 throw new Error("WASM code is required");
             }

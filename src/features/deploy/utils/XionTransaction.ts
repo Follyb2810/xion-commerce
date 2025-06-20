@@ -16,13 +16,13 @@ import path from "path";
 
 const WASM_FILE_PATH = path.join(
   __dirname,
-  "../artifacts/escrow_contract.wasm"
+  "../../../../public/artifacts/escrow_contract.wasm"
 );
-
+console.log(WASM_FILE_PATH);
 class XionTransaction {
   private readonly xionWallet: XionWallet;
   private readonly xionConnect: XionConnect;
-  // private readonly contractAddress?: string; 
+  // private readonly contractAddress?: string;
   private readonly adminAddress: string;
 
   constructor(config?: {
@@ -33,7 +33,7 @@ class XionTransaction {
   }) {
     this.xionConnect = config?.xionConnect ?? new XionConnect();
     this.xionWallet = config?.xionWallet ?? new XionWallet();
-    // this.contractAddress = config?.contractAddress ?? process.env.CONTRACT_ADDRESS; 
+    // this.contractAddress = config?.contractAddress ?? process.env.CONTRACT_ADDRESS;
     this.adminAddress =
       config?.adminAddress ?? (process.env.ADMIN_ADDRESS as string);
 
@@ -75,15 +75,14 @@ class XionTransaction {
     };
   }
 
-
   async executeContract(
-    contractAddress: string, 
+    contractAddress: string,
     msg: JsonObject,
     funds: { denom: string; amount: string }[] = [],
     mnemonic?: string
   ): Promise<TransactionResult> {
     // const targetContract = contractAddress || this.contractAddress;
-    
+
     if (!contractAddress) {
       throw new Error("Contract address is required for execution");
     }
@@ -125,9 +124,10 @@ class XionTransaction {
     if (!XionUtils.isValidXionAddress(senderAddress)) {
       throw new Error(`Invalid sender address: ${senderAddress}`);
     }
-    
+
     const wasmCode = wasmFilePath ? wasmFilePath : readFileSync(WASM_FILE_PATH);
-    
+    console.log(`📄 Contract size: ${wasmCode.length} bytes`);
+
     if (!wasmCode || wasmCode.length === 0) {
       throw new Error("WASM code is required");
     }
@@ -183,7 +183,7 @@ class XionTransaction {
 
   async queryContract(
     contractAddress: string,
-    msg: JsonObject,
+    msg: JsonObject
   ): Promise<IQueryContract> {
     if (!XionUtils.isValidXionAddress(contractAddress)) {
       throw new Error(`Invalid contract address: ${contractAddress}`);
@@ -201,7 +201,7 @@ class XionTransaction {
     mnemonic?: string
   ) {
     // const targetContract = contractAddress || this.contractAddress;
-    
+
     if (!contractAddress) {
       throw new Error("Contract address is required for gas estimation");
     }
