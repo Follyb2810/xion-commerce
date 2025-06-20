@@ -10,6 +10,30 @@ import {
 import { cache } from "../../common/libs/cache";
 import orderService from "../order/order.service";
 
+const retry = async <T>(
+  fn: () => Promise<T>,
+  maxAttempts: number = 3,
+  delay: number = 1000
+): Promise<T> => {
+  let lastError: Error;
+  
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error as Error;
+      
+      if (attempt === maxAttempts) {
+        throw lastError;
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, delay * attempt));
+    }
+  }
+  
+  throw lastError!;
+};
+
 export const first = async (req: Request, res: Response) => {};
 
 export const deployEscrowContract = AsyncHandler(
@@ -20,11 +44,15 @@ export const deployEscrowContract = AsyncHandler(
     }
 
     try {
-      const result = await DeployService.deployEscrowContract({
-        buyer,
-        required_deposit,
-        seller,
-      });
+      const result = await retry(
+        () => DeployService.deployEscrowContract({
+          buyer,
+          required_deposit,
+          seller,
+        }),
+        3,
+        1000
+      );
 
       if (!result.success) {
         console.log(result.errorCode);
@@ -53,19 +81,22 @@ export const releaseOrRefund = AsyncHandler(
     }
 
     try {
-      const release = await DeployService.releaseOrRefund(
-        action,
-        contractAddress
+      const release = await retry(
+        () => DeployService.releaseOrRefund(action, contractAddress),
+        3,
+        1000
       );
 
       if (!release.success) {
         return ErrorHandler(res, "", 400);
       }
 
-      const updatedOrder = await orderService.updateOrderStatus(
-        orderId as string,
-        status
+      const updatedOrder = await retry(
+        () => orderService.updateOrderStatus(orderId as string, status),
+        3,
+        500
       );
+
       cache.keys().forEach((key) => {
         if (key.startsWith(`user:order:${orderId}`)) {
           cache.del(key);
