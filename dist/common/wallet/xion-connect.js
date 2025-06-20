@@ -65,14 +65,3 @@ class XionConnect {
     }
 }
 exports.default = XionConnect;
-// async executeContractFunction(senderAddress: string, msg: JsonObject, funds = []) {
-// return this.executeContract(senderAddress, msg, funds);
-// }
-//  const client = await CosmWasmClient.connect(this.xionConnect.rpcUrl);
-/**
-const wasmClient = await xionConnect.getSigningWasmClient();
-await wasmClient.execute(senderAddress, contractAddress, msg, "auto");
-const bankClient = await xionConnect.getSigningClient();
-await bankClient.sendTokens(senderAddress, recipientAddress, [{ denom, amount }], "auto");
-
-*/

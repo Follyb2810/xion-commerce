@@ -27,9 +27,6 @@ class XionWallet {
         const hash = crypto_1.default.createHash("sha256").update(email).digest("hex");
         const entropy = Buffer.from(hash, "hex").subarray(0, 16);
         return (0, bip39_1.entropyToMnemonic)(entropy, english_1.wordlist);
-        // return bip39.entropyToMnemonic(); // 32 hex chars = 16 bytes entropy
-        // return bip39.entropyToMnemonic(hash.slice(0, 32)); // 32 hex chars = 16 bytes entropy
-        // return entropyToMnemonic(hash.slice(0, 32), wordlist); // 32 hex chars = 16 bytes entropy
     }
     static generateAddressFromEmail(email) {
         return __awaiter(this, void 0, void 0, function* () {

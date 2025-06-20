@@ -8,7 +8,7 @@ const formatProductResponse = (product, seller, quantity) => {
         price: product.price,
         totalAmount: product.price * quantity,
         seller: seller._id,
-        sellerAddress: seller.walletAddress
+        sellerAddress: seller.walletAddress,
     };
 };
 exports.formatProductResponse = formatProductResponse;

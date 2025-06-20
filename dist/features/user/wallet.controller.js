@@ -16,7 +16,7 @@ exports.authUpdateWallet = exports.authWallet = void 0;
 const user_service_1 = __importDefault(require("./user.service"));
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const user_mapper_1 = require("./user.mapper");
-const ResponseHandler_1 = require("./../../utils/ResponseHandler");
+const ResponseHandler_1 = require("./../../common/exceptions/ResponseHandler");
 exports.authWallet = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { walletAddress } = req.body;
     if (!walletAddress) {
@@ -26,10 +26,15 @@ exports.authWallet = (0, express_async_handler_1.default)((req, res) => __awaite
     try {
         const newUser = yield user_service_1.default.authWallet(walletAddress);
         const accessToken = yield user_service_1.default.generateAccessToken(newUser._id, newUser.role);
-        return (0, ResponseHandler_1.ResponseHandler)(res, 201, "User registered successfully", {
+        const result = (0, user_mapper_1.UserResponse)(newUser);
+        (0, ResponseHandler_1.ResponseHandler)(res, 200, "User Successfull login or Register", {
             accessToken,
-            user: (0, user_mapper_1.UserResponse)(newUser),
+            user: result,
         });
+        // return ResponseHandler(res, 201, "User registered successfully", {
+        //   accessToken,
+        //   user: UserResponse(newUser),
+        // });
     }
     catch (error) {
         if (error.message === "USER_EXIST") {
@@ -57,22 +62,6 @@ exports.authUpdateWallet = (0, express_async_handler_1.default)((req, res) => __
         return (0, ResponseHandler_1.ResponseHandler)(res, 200, "Profile updated successfully", updatedUser);
     }
     catch (error) {
-        //   const errorType = error.message as ErrorKeyOf
-        // console.error("Update profile error:", error);
-        // switch (error.message) {
-        //   case "Unauthorized":
-        //     return ErrorHandler(res, "Unauthorized", 401);
-        //   case "User not found":
-        //     return ErrorHandler(res, "User not found", 404);
-        //   case "You cannot change your email":
-        //     return ErrorHandler(res, "Email cannot be changed", 400);
-        //   case "Wallet address is already in use":
-        //     return ErrorHandler(res, "Wallet address already in use", 409);
-        //   case "You must add an email before changing your wallet address":
-        //     return ErrorHandler(res, "Add email before changing wallet", 400);
-        //   default:
-        //     return ErrorHandler(res, "Failed to update profile", 500);
-        // }
         let errorKey = "SERVER_ERROR";
         let statusCode = 500;
         if (error instanceof Error) {

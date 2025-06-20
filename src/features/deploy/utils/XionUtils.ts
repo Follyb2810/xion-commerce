@@ -20,7 +20,7 @@ export class XionUtils {
   }
 
   static isValidXionAddress(address: string): boolean {
-    return /^xion1[a-z0-9]{38}$/.test(address);
+    return /^xion1[a-z0-9]{38,58}$/.test(address);
   }
 
   static isValidTxHash(hash: string): boolean {

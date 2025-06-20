@@ -14,9 +14,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getKycStatus = exports.verifyKYC = exports.uploadKycDocuments = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
-const ResponseHandler_1 = require("./../../utils/ResponseHandler");
+const ResponseHandler_1 = require("./../../common/exceptions/ResponseHandler");
 const user_repository_1 = __importDefault(require("./user.repository"));
-const claudinary_1 = __importDefault(require("./../../utils/claudinary"));
+const claudinary_1 = __importDefault(require("./../../common/libs/claudinary"));
 const IUser_1 = require("./../../common/types/IUser");
 const user_mapper_1 = require("./user.mapper");
 exports.uploadKycDocuments = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -96,7 +96,7 @@ exports.getKycStatus = (0, express_async_handler_1.default)((req, res) => __awai
     const userId = req._id;
     if (!userId)
         return (0, ResponseHandler_1.ErrorHandler)(res, "UNAUTHORIZED", 401);
-    const user = yield user_repository_1.default.findById(userId, 'kyc');
+    const user = yield user_repository_1.default.findById(userId, "kyc");
     if (!user)
         return (0, ResponseHandler_1.ErrorHandler)(res, "USER_NOTFOUND", 404);
     (0, ResponseHandler_1.ResponseHandler)(res, 200, "KYC status retrieved", {

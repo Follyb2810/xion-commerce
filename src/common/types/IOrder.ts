@@ -22,6 +22,7 @@ export interface IOrder extends Document {
   totalAmount: number;
   status: OrderStatus
   email?: string;
+  contractAddress?: string;
   fullName?: string;
   phoneNumber?:string;
   payment: {

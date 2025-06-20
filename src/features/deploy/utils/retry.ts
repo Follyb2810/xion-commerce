@@ -9,7 +9,7 @@ export async function retry<T>(
       return await fn();
     } catch (error) {
       lastError = error;
-      if (i < retries - 1) await new Promise(res => setTimeout(res, delayMs));
+      if (i < retries - 1) await new Promise((res) => setTimeout(res, delayMs));
     }
   }
   throw lastError;

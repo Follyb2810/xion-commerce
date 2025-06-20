@@ -17,13 +17,19 @@ const express_async_handler_1 = __importDefault(require("express-async-handler")
 const IUser_1 = require("./../../common/types/IUser");
 const ResponseHandler_1 = require("./../../common/exceptions/ResponseHandler");
 const product_service_1 = __importDefault(require("./product.service"));
+const cache_1 = require("../../common/libs/cache");
 exports.allProducts = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield product_service_1.default.getAllProducts(req.query);
+        // console.log({ a: result });
+        if (req.cacheKey && result) {
+            const cacheData = JSON.parse(JSON.stringify(result));
+            const success = cache_1.cache.set(req.cacheKey, cacheData, 600);
+            console.log(`Cache set for ${req.cacheKey}:`, success ? "✅ Success" : "❌ Failed");
+        }
         return (0, ResponseHandler_1.ResponseHandler)(res, 200, "Products retrieved successfully", result);
     }
     catch (error) {
-        console.error("Get all products error:", error);
         if (error.message === "INVALID_CATEGORY_ID") {
             return (0, ResponseHandler_1.ErrorHandler)(res, "Invalid category ID", 400);
         }
@@ -33,10 +39,16 @@ exports.allProducts = (0, express_async_handler_1.default)((req, res) => __await
 exports.getProductById = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const product = yield product_service_1.default.getProductById(req.params.productId);
-        return (0, ResponseHandler_1.ResponseHandler)(res, 200, "Product retrieved successfully", { product });
+        if (req.cacheKey && product) {
+            const cacheData = JSON.parse(JSON.stringify({ product }));
+            const success = cache_1.cache.set(req.cacheKey, cacheData, 600);
+            console.log(`Cache set for key ${req.cacheKey}:`, success ? "Success" : "Failed");
+        }
+        return (0, ResponseHandler_1.ResponseHandler)(res, 200, "Product retrieved successfully", {
+            product,
+        });
     }
     catch (error) {
-        console.error("Get product by ID error:", error);
         if (error.message === "PRODUCT_NOT_FOUND") {
             return (0, ResponseHandler_1.ErrorHandler)(res, "PRODUCT_NOT_FOUND", 404);
         }
@@ -55,10 +67,17 @@ exports.createProduct = (0, express_async_handler_1.default)((req, res) => __awa
         const files = req.files;
         const productData = Object.assign(Object.assign({}, req.body), { sellerId: req._id });
         const newProduct = yield product_service_1.default.createProduct(productData, files);
-        return (0, ResponseHandler_1.ResponseHandler)(res, 201, "Product uploaded successfully", { product: newProduct });
+        cache_1.cache.del("products:list"); // products:list
+        cache_1.cache.keys().forEach((key) => {
+            if (key.startsWith("product")) {
+                cache_1.cache.del(key);
+            }
+        });
+        return (0, ResponseHandler_1.ResponseHandler)(res, 201, "Product uploaded successfully", {
+            product: newProduct,
+        });
     }
     catch (error) {
-        console.error("Create product error:", error);
         if (error.message === "COVER_IMAGE_REQUIRED") {
             return (0, ResponseHandler_1.ErrorHandler)(res, "Cover image is required", 400);
         }
@@ -75,10 +94,11 @@ exports.deleteProduct = (0, express_async_handler_1.default)((req, res) => __awa
     try {
         const { productId } = req.params;
         yield product_service_1.default.deleteProduct(productId, req._id);
+        cache_1.cache.del(`product:${productId}`); //product:124
+        cache_1.cache.del("products:list"); // product:loist
         return (0, ResponseHandler_1.ResponseHandler)(res, 200, "Product deleted successfully");
     }
     catch (error) {
-        console.error("Delete product error:", error);
         if (error.message === "PRODUCT_NOT_FOUND") {
             return (0, ResponseHandler_1.ErrorHandler)(res, "PRODUCT_NOT_FOUND", 404);
         }
@@ -89,12 +109,16 @@ exports.deleteProduct = (0, express_async_handler_1.default)((req, res) => __awa
     }
 }));
 exports.updateProduct = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { productId } = req.params;
     try {
-        const updatedProduct = yield product_service_1.default.updateProduct(req.params.productId, req._id, req.body);
-        return (0, ResponseHandler_1.ResponseHandler)(res, 200, "Product updated successfully", { updatedProduct });
+        const updatedProduct = yield product_service_1.default.updateProduct(productId, req._id, req.body);
+        cache_1.cache.del(`product:${productId}`); // product:123
+        cache_1.cache.del("products:list"); //product:list
+        return (0, ResponseHandler_1.ResponseHandler)(res, 200, "Product updated successfully", {
+            updatedProduct,
+        });
     }
     catch (error) {
-        console.error("Update product error:", error);
         if (error.message === "PRODUCT_NOT_FOUND") {
             return (0, ResponseHandler_1.ErrorHandler)(res, "PRODUCT_NOT_FOUND", 404);
         }
@@ -111,11 +135,13 @@ exports.updateProductImage = (0, express_async_handler_1.default)((req, res) => 
     try {
         const files = req.files;
         const imageFiles = (files === null || files === void 0 ? void 0 : files.image_of_land) || [];
-        yield product_service_1.default.updateProductImage(req.params.productId, req._id, imageFiles);
+        const { productId } = req.params;
+        yield product_service_1.default.updateProductImage(productId, req._id, imageFiles);
+        // cache.del(`product:${productId}`); // product:123
+        // cache.del("products:list"); //product:list
         return (0, ResponseHandler_1.ResponseHandler)(res, 200, "Image(s) updated successfully");
     }
     catch (error) {
-        console.error("Update product image error:", error);
         if (error.message === "PRODUCT_NOT_FOUND") {
             return (0, ResponseHandler_1.ErrorHandler)(res, "PRODUCT_NOT_FOUND", 404);
         }
@@ -136,10 +162,11 @@ exports.deleteProductImage = (0, express_async_handler_1.default)((req, res) => 
         const { productId } = req.params;
         const { imageUrl } = req.query;
         yield product_service_1.default.deleteProductImage(productId, req._id, imageUrl);
+        cache_1.cache.del(`product:${productId}`); // product:123
+        cache_1.cache.del("products:list"); //products:list
         return (0, ResponseHandler_1.ResponseHandler)(res, 200, "Image deleted successfully");
     }
     catch (error) {
-        console.error("Delete product image error:", error);
         if (error.message === "IMAGE_URL_REQUIRED") {
             return (0, ResponseHandler_1.ErrorHandler)(res, "Missing or invalid imageUrl", 400);
         }
@@ -166,14 +193,16 @@ exports.updateProductDocument = (0, express_async_handler_1.default)((req, res) 
     try {
         const files = req.files;
         const documentFile = (_a = files === null || files === void 0 ? void 0 : files.document_of_land) === null || _a === void 0 ? void 0 : _a[0];
+        const { productId } = req.params;
         if (!documentFile) {
             return (0, ResponseHandler_1.ErrorHandler)(res, "No document file uploaded", 400);
         }
-        yield product_service_1.default.updateProductDocument(req.params.productId, req._id, documentFile);
+        yield product_service_1.default.updateProductDocument(productId, req._id, documentFile);
+        cache_1.cache.del(`product:${productId}`); // product:123
+        cache_1.cache.del("products:list"); //products:list
         return (0, ResponseHandler_1.ResponseHandler)(res, 204, "Document updated successfully");
     }
     catch (error) {
-        console.error("Update product document error:", error);
         if (error.message === "PRODUCT_NOT_FOUND") {
             return (0, ResponseHandler_1.ErrorHandler)(res, "PRODUCT_NOT_FOUND", 404);
         }
@@ -192,49 +221,67 @@ exports.allSellerProduct = (0, express_async_handler_1.default)((req, res) => __
         return (0, ResponseHandler_1.ResponseHandler)(res, 200, "All seller products retrieved successfully", { products });
     }
     catch (error) {
-        console.error("Get seller products error:", error);
         return (0, ResponseHandler_1.ErrorHandler)(res, "FAILED_TO_FETCH_SELLER_PRODUCTS", 500);
     }
 }));
 exports.getSpecialOffers = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const products = yield product_service_1.default.getSpecialOffers();
+        if (req.cacheKey) {
+            const cacheData = JSON.parse(JSON.stringify({ products }));
+            const success = cache_1.cache.set(req.cacheKey, cacheData, 600); // product:special
+            console.log(`Cache set for key ${req.cacheKey}:`, success ? "Success" : "Failed");
+        }
         return (0, ResponseHandler_1.ResponseHandler)(res, 200, "Special offers fetched", { products });
     }
     catch (error) {
-        console.error("Get special offers error:", error);
         return (0, ResponseHandler_1.ErrorHandler)(res, "FAILED_TO_FETCH_SPECIAL_OFFERS", 500);
     }
 }));
 exports.getBestDeals = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const products = yield product_service_1.default.getBestDeals();
+        if (req.cacheKey) {
+            const cacheData = JSON.parse(JSON.stringify({ products }));
+            const success = cache_1.cache.set(req.cacheKey, cacheData, 600); // product:best
+        }
         return (0, ResponseHandler_1.ResponseHandler)(res, 200, "Best deals fetched", { products });
     }
     catch (error) {
-        console.error("Get best deals error:", error);
         return (0, ResponseHandler_1.ErrorHandler)(res, "FAILED_TO_FETCH_BEST_DEALS", 500);
     }
 }));
 exports.getTopSelling = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const products = yield product_service_1.default.getTopSelling();
-        return (0, ResponseHandler_1.ResponseHandler)(res, 200, "Top selling properties fetched", { products });
+        if (req.cacheKey) {
+            const cacheData = JSON.parse(JSON.stringify({ products }));
+            const success = cache_1.cache.set(req.cacheKey, cacheData, 600); // product:top
+        }
+        return (0, ResponseHandler_1.ResponseHandler)(res, 200, "Top selling properties fetched", {
+            products,
+        });
     }
     catch (error) {
-        console.error("Get top selling error:", error);
         return (0, ResponseHandler_1.ErrorHandler)(res, "FAILED_TO_FETCH_TOP_SELLING", 500);
     }
 }));
 exports.getProductByCategory = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const rawCategory = req.query.category;
-        const category = typeof rawCategory === "string" ? rawCategory : Array.isArray(rawCategory) ? rawCategory[0] : "";
+        const category = typeof rawCategory === "string"
+            ? rawCategory
+            : Array.isArray(rawCategory)
+                ? rawCategory[0]
+                : "";
         const products = yield product_service_1.default.getProductsByCategory(category);
+        if (req.cacheKey) {
+            const cacheData = JSON.parse(JSON.stringify({ products }));
+            const success = cache_1.cache.set(req.cacheKey, cacheData, 600); //product:byCategory
+        }
         return (0, ResponseHandler_1.ResponseHandler)(res, 200, "Product by category", products);
     }
     catch (error) {
-        console.error("Get products by category error:", error);
         if (error.message === "INVALID_CATEGORY_ID") {
             return (0, ResponseHandler_1.ErrorHandler)(res, "Invalid category ID", 400);
         }

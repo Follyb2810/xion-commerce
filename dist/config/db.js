@@ -14,11 +14,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.connectDb = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
-const Category_1 = require("../models/Category");
+const category_model_1 = require("./../features/category/category.model");
 const categorySeed_1 = require("../seed/categorySeed");
-const User_1 = __importDefault(require("../models/User"));
-const bcrypt_1 = require("../utils/bcrypt");
-const IUser_1 = require("../types/IUser");
+const user_model_1 = __importDefault(require("./../features/user/user.model"));
+const bcrypt_1 = require("./../common/libs/bcrypt");
+const IUser_1 = require("./../common/types/IUser");
 const connectDb = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         mongoose_1.default.set("strictQuery", true);
@@ -71,16 +71,16 @@ const connectDb = () => __awaiter(void 0, void 0, void 0, function* () {
         //     }
         //      await User.collection.dropIndex("walletAddress_1")
         //      console.log('success')
-        const existingCategories = yield Category_1.Category.find();
+        const existingCategories = yield category_model_1.Category.find();
         if (existingCategories.length === 0) {
-            yield Category_1.Category.insertMany(categorySeed_1.categoriesSeed);
+            yield category_model_1.Category.insertMany(categorySeed_1.categoriesSeed);
             console.log("Categories seeded successfully.");
         }
         const email = "superadmin@chaincart.com";
-        const existingUser = yield User_1.default.findOne({ email });
+        const existingUser = yield user_model_1.default.findOne({ email });
         if (!existingUser) {
             const hashedPassword = yield (0, bcrypt_1.hashPwd)("Chaincart123");
-            const superAdmin = new User_1.default({
+            const superAdmin = new user_model_1.default({
                 username: "superadmin123",
                 email,
                 password: hashedPassword,

@@ -3,14 +3,14 @@ import { AuthRequest } from "./auth";
 
 export const verifyRole = (...allowRoles: string[]): RequestHandler => {
   return (req: Request, res: Response, next: NextFunction): void => {
-    const authReq = req as AuthRequest; 
+    const authReq = req as AuthRequest;
     const userRoles: string[] | undefined = authReq.roles;
-    
+
     if (!userRoles || !Array.isArray(userRoles)) {
       res.status(403).json({
         message: "Access denied: No roles found or invalid roles format.",
       });
-      return; 
+      return;
     }
 
     const hasPermission = userRoles.some((role) => allowRoles.includes(role));
@@ -22,6 +22,6 @@ export const verifyRole = (...allowRoles: string[]): RequestHandler => {
       return;
     }
 
-    next(); 
+    next();
   };
 };

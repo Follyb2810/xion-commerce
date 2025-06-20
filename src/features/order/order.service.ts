@@ -11,6 +11,7 @@ interface DirectPurchaseInput {
   productId: string;
   quantity: number;
   transactionHash: string;
+  contractAddress?: string;
   email: string;
   fullName: string;
   phoneNumber: string;
@@ -30,8 +31,10 @@ class OrderService {
 
   async updateOrderStatus(orderId: string, status: string) {
     const normalizedStatus = status.toLowerCase();
-    
-    const validStatuses = Object.values(OrderStatus).map((s) => s.toLowerCase());
+
+    const validStatuses = Object.values(OrderStatus).map((s) =>
+      s.toLowerCase()
+    );
     if (!validStatuses.includes(normalizedStatus)) {
       throw new Error("INVALID_STATUS");
     }
@@ -49,7 +52,9 @@ class OrderService {
       }
     }
 
-    return await OrderRepository.updateById(orderId, { status: normalizedStatus });
+    return await OrderRepository.updateById(orderId, {
+      status: normalizedStatus,
+    });
   }
 
   async getDirectPurchaseHistory(userId: string) {
@@ -66,7 +71,7 @@ class OrderService {
       { $or: [{ buyer: userId }, { seller: userId }] },
       "buyer seller items status totalAmount createdAt updatedAt"
     );
-    
+
     if (!orders) {
       throw new Error("ORDER_NOT_FOUND");
     }
@@ -102,6 +107,7 @@ class OrderService {
       fullName,
       phoneNumber,
       saveDetailsToProfile,
+      contractAddress,
     } = input;
 
     if (!Types.ObjectId.isValid(productId)) {
@@ -124,7 +130,6 @@ class OrderService {
     const totalAmount = product.price * quantity;
 
     try {
-
       const order = await OrderRepository.create({
         buyer: new Types.ObjectId(userId),
         seller: product.seller,
@@ -144,6 +149,7 @@ class OrderService {
         fullName,
         phoneNumber,
         status: OrderStatus.PENDING,
+        contractAddress,
       });
 
       await ProductRepository.updateById(productId, {
@@ -188,7 +194,11 @@ class OrderService {
     }
   }
 
-  private async updateCartAfterPurchase(userId: string, productId: string, quantity: number) {
+  private async updateCartAfterPurchase(
+    userId: string,
+    productId: string,
+    quantity: number
+  ) {
     const cart = await CartRepository.findByEntity({
       user: new Types.ObjectId(userId),
     });
@@ -215,7 +225,10 @@ class OrderService {
     }
   }
 
-  private async updateUserProfileFromOrder(userId: string, orderDetails: OrderDetailsForProfile) {
+  private async updateUserProfileFromOrder(
+    userId: string,
+    orderDetails: OrderDetailsForProfile
+  ) {
     try {
       const user = await UserRepository.findById(userId);
       if (!user) return;

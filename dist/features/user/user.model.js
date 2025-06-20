@@ -35,7 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const IUser_1 = require("./../../common/types/IUser");
-const hash_1 = require("./../../utils/hash");
+const hash_1 = require("./../../common/utils/hash");
 const userSchema = new mongoose_1.Schema({
     username: {
         type: String,
@@ -68,14 +68,14 @@ const userSchema = new mongoose_1.Schema({
         bio: { type: String, default: null },
         avatar: {
             type: String,
-            default: 'https://via.placeholder.com/150',
+            default: "https://via.placeholder.com/150",
         },
     },
     refreshToken: { type: String, default: null },
     history: [
         {
             paid: { type: Number, default: 0 },
-            item: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Product' },
+            item: { type: mongoose_1.Schema.Types.ObjectId, ref: "Product" },
             timestamp: { type: Date, default: Date.now },
             transactionHash: { type: String, default: null },
         },
@@ -111,13 +111,14 @@ const userSchema = new mongoose_1.Schema({
 userSchema.index({ role: 1 });
 userSchema.index({ "profile.name": 1 });
 userSchema.index({ email: 1, isVerified: 1 });
-userSchema.pre('save', function (next) {
+userSchema.pre("save", function (next) {
     if (!this.username && this.email) {
         this.username = this.email;
     }
-    if (this.isModified('mnemonic') && this.mnemonic && this._id) {
+    if (this.isModified("mnemonic") && this.mnemonic && this._id) {
         this.mnemonic = (0, hash_1.encryptKey)(this.mnemonic, this._id.toString());
     }
     next();
 });
-exports.default = mongoose_1.default.models.User || mongoose_1.default.model('User', userSchema);
+exports.default = mongoose_1.default.models.User ||
+    mongoose_1.default.model("User", userSchema);

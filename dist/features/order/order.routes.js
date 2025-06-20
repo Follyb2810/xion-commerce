@@ -1,21 +1,21 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const auth_1 = require("./../../middleware/auth");
 const order_controller_1 = require("./order.controller");
 const CheckStock_1 = require("./../../middleware/CheckStock");
+const checkCache_1 = __importDefault(require("../../middleware/checkCache"));
+const IUser_1 = require("../../common/types/IUser");
+const verifyRole_1 = require("../../middleware/verifyRole");
 const router = (0, express_1.Router)();
-router.get('/', auth_1.auth, order_controller_1.getDirectPurchaseHistory);
-router.get('/user_order', auth_1.auth, order_controller_1.getUserOrder);
-router.get('/all', auth_1.auth, order_controller_1.allOrder);
-router.get('/all_user_order', auth_1.auth, order_controller_1.getUserPurchaseHistory);
-router.put('/:orderId/status', auth_1.auth, order_controller_1.updateOrderStatus);
-// router.put( "/escrow/:orderId", auth,releaseOrCancelEscrow, updateOrderStatus);
-router.post('/available', auth_1.auth, CheckStock_1.CheckStock, order_controller_1.checkProductAvailability);
-router.post('/confirm', auth_1.auth, order_controller_1.directPurchase);
-/**
-AuthMiddleware, // Ensure user authentication
-  releaseOrCancelEscrow, // First, process escrow transaction
-  updateOrderStatus
-*/
+router.get("/", auth_1.auth, order_controller_1.getDirectPurchaseHistory);
+router.get("/user_order", auth_1.auth, order_controller_1.getUserOrder);
+router.get("/all_orders", auth_1.auth, (0, verifyRole_1.verifyRole)(IUser_1.Roles.ADMIN), (0, checkCache_1.default)(() => `order:list`), order_controller_1.allOrder);
+router.get("/all_user_order", auth_1.auth, (0, checkCache_1.default)((req) => `user:order:${req._id}:${req.query.status}`), order_controller_1.getUserPurchaseHistory);
+router.put("/:orderId/status", auth_1.auth, order_controller_1.updateOrderStatus);
+router.post("/available", auth_1.auth, CheckStock_1.CheckStock, order_controller_1.checkProductAvailability);
+router.post("/confirm", auth_1.auth, order_controller_1.directPurchase);
 exports.default = router;

@@ -12,11 +12,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCheckoutData = exports.updateUserProfile = exports.allUser = exports.UserProfile = exports.removeUserRole = exports.verifyUser = exports.SingleUser = exports.login = exports.register = void 0;
+exports.getCheckoutData = exports.updateUserProfile = exports.allUser = exports.UserProfile = exports.updateUserRole = exports.verifyUser = exports.SingleUser = exports.login = exports.register = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const user_mapper_1 = require("./user.mapper");
-const ResponseHandler_1 = require("./../../utils/ResponseHandler");
+const ResponseHandler_1 = require("./../../common/exceptions/ResponseHandler");
 const user_service_1 = __importDefault(require("./user.service"));
+const cache_1 = require("../../common/libs/cache");
+const IUser_1 = require("../../common/types/IUser");
 exports.register = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -63,6 +65,11 @@ exports.SingleUser = (0, express_async_handler_1.default)((req, res) => __awaite
     if (!user) {
         return (0, ResponseHandler_1.ErrorHandler)(res, "USER_NOTFOUND", 404);
     }
+    if (req.cacheKey && user) {
+        const cacheData = JSON.parse(JSON.stringify({ user }));
+        const success = cache_1.cache.set(req.cacheKey, cacheData, 600);
+        console.log(`Cache set for key ${req.cacheKey}:`, success ? "Success" : "Failed");
+    }
     return (0, ResponseHandler_1.ResponseHandler)(res, 200, "User retrieved successfully", {
         user: (0, user_mapper_1.UserResponse)(user),
     });
@@ -80,12 +87,20 @@ exports.verifyUser = (0, express_async_handler_1.default)((req, res) => __awaite
         throw error;
     }
 }));
-exports.removeUserRole = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.updateUserRole = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
-    const { role } = req.body;
+    const { role, action } = req.body;
     try {
-        yield user_service_1.default.removeUserRole(id, role);
-        return (0, ResponseHandler_1.ResponseHandler)(res, 200, "Role removed successfully");
+        if (!Object.values(IUser_1.Roles).includes(role)) {
+            return (0, ResponseHandler_1.ErrorHandler)(res, "INVALID_ROLE", 400);
+        }
+        yield user_service_1.default.updateUserRole(id, role, action);
+        cache_1.cache.keys().forEach((key) => {
+            if (key.startsWith("user")) {
+                cache_1.cache.del(key);
+            }
+        });
+        return (0, ResponseHandler_1.ResponseHandler)(res, 200, `Role ${action} successfully`);
     }
     catch (error) {
         if (error.message === "INVALID_ROLE") {
@@ -103,12 +118,22 @@ exports.UserProfile = (0, express_async_handler_1.default)((req, res) => __await
     if (!user) {
         return (0, ResponseHandler_1.ErrorHandler)(res, "USER_NOTFOUND", 404);
     }
+    if (req.cacheKey && user) {
+        const cacheData = JSON.parse(JSON.stringify({ user }));
+        const success = cache_1.cache.set(req.cacheKey, cacheData, 600);
+        console.log(`Cache set for key ${req.cacheKey}:`, success ? "Success" : "Failed");
+    }
     return (0, ResponseHandler_1.ResponseHandler)(res, 200, "User profile retrieved successfully", {
         user: (0, user_mapper_1.UserResponse)(user),
     });
 }));
 exports.allUser = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const users = yield user_service_1.default.getAllUsers();
+    if (req.cacheKey && users) {
+        const cacheData = JSON.parse(JSON.stringify({ users }));
+        const success = cache_1.cache.set(req.cacheKey, cacheData, 600);
+        console.log(`Cache set for key ${req.cacheKey}:`, success ? "Success" : "Failed");
+    }
     return (0, ResponseHandler_1.ResponseHandler)(res, 200, "All users retrieved successfully", {
         users: users.map(user_mapper_1.UserResponse),
     });
@@ -118,6 +143,11 @@ exports.updateUserProfile = (0, express_async_handler_1.default)((req, res) => _
     const { email, phoneNumber, name } = req.body;
     try {
         yield user_service_1.default.updateUserProfile(id, { email, phoneNumber, name });
+        cache_1.cache.keys().forEach((key) => {
+            if (key.startsWith("user")) {
+                cache_1.cache.del(key);
+            }
+        });
         return (0, ResponseHandler_1.ResponseHandler)(res, 200, "User profile updated successfully");
     }
     catch (error) {
@@ -140,6 +170,11 @@ exports.getCheckoutData = (0, express_async_handler_1.default)((req, res) => __a
         return;
     }
     const user = yield user_service_1.default.getUserByWalletAddress(walletAddress);
+    if (req.cacheKey && user) {
+        const cacheData = JSON.parse(JSON.stringify({ user }));
+        const success = cache_1.cache.set(req.cacheKey, cacheData, 600);
+        console.log(`Cache set for key ${req.cacheKey}:`, success ? "Success" : "Failed");
+    }
     return (0, ResponseHandler_1.ResponseHandler)(res, 200, "User data retrieved successfully", {
         user,
     });

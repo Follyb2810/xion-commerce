@@ -120,6 +120,7 @@ export const directPurchase = AsyncHandler(
         fullName,
         phoneNumber,
         saveDetailsToProfile = false,
+        contractAddress
       } = req.body;
 
       const result = await OrderService.directPurchase({
@@ -131,6 +132,7 @@ export const directPurchase = AsyncHandler(
         fullName,
         phoneNumber,
         saveDetailsToProfile,
+        contractAddress
       });
 
       cache.keys().forEach((key) => {

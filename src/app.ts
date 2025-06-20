@@ -9,10 +9,10 @@ import rateLimit from "express-rate-limit";
 import path from "path";
 import http from "http";
 import { allowedOrigins } from "./config/allowedOrigins";
-import setupRoutes from "./features";
 import { globalError } from "./middleware/globalError";
 import { initializeSocket } from "./config/socketConfig";
 import { cache } from "./common/libs/cache";
+import loadRoutes from "./features";
 
 const port = process.env.PORT || 8080;
 const app: Application = express();
@@ -71,7 +71,7 @@ app.get("/", (req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-setupRoutes(app);
+loadRoutes(app);
 
 app.use(globalError);
 

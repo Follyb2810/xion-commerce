@@ -48,6 +48,7 @@ const orderSchema = new mongoose_1.Schema({
     status: { type: String, enum: Object.values(IOrder_1.OrderStatus), default: IOrder_1.OrderStatus.PENDING },
     email: { type: String, default: null },
     fullName: { type: String, default: null },
+    contractAddress: { type: String, default: null },
     totalAmount: { type: Number, required: true },
     phoneNumber: { type: Number, required: true },
     payment: {

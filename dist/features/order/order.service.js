@@ -42,7 +42,9 @@ class OrderService {
                     });
                 }
             }
-            return yield order_repository_1.default.updateById(orderId, { status: normalizedStatus });
+            return yield order_repository_1.default.updateById(orderId, {
+                status: normalizedStatus,
+            });
         });
     }
     getDirectPurchaseHistory(userId) {
@@ -82,7 +84,7 @@ class OrderService {
     }
     directPurchase(input) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { userId, productId, quantity, transactionHash, email, fullName, phoneNumber, saveDetailsToProfile, } = input;
+            const { userId, productId, quantity, transactionHash, email, fullName, phoneNumber, saveDetailsToProfile, contractAddress, } = input;
             if (!mongoose_1.Types.ObjectId.isValid(productId)) {
                 throw new Error("INVALID_PRODUCT_ID");
             }
@@ -117,6 +119,7 @@ class OrderService {
                     fullName,
                     phoneNumber,
                     status: IOrder_1.OrderStatus.PENDING,
+                    contractAddress,
                 });
                 yield product_repository_1.default.updateById(productId, {
                     $inc: { stock: -quantity },
@@ -153,8 +156,7 @@ class OrderService {
                 };
             }
             catch (error) {
-                console.error("Direct purchase error:", error);
-                throw new Error("PURCHASE_FAILED");
+                throw new Error("PURCHASE_FAILED" + error);
             }
         });
     }

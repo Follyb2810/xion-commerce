@@ -17,13 +17,18 @@ const express_async_handler_1 = __importDefault(require("express-async-handler")
 const ResponseHandler_1 = require("./../../common/exceptions/ResponseHandler");
 const ProductResponse_1 = require("./../../middleware/ProductResponse");
 const order_service_1 = __importDefault(require("./order.service"));
+const cache_1 = require("../../common/libs/cache");
 exports.allOrder = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const allOrders = yield order_service_1.default.getAllOrder();
-        (0, ResponseHandler_1.ResponseHandler)(res, 200, 'All orders', allOrders);
+        if (req.cacheKey && allOrders) {
+            const cacheData = JSON.parse(JSON.stringify(allOrders));
+            const success = cache_1.cache.set(req.cacheKey, cacheData, 600);
+            console.log(`Cache set for ${req.cacheKey}:`, success ? "✅ Success" : "❌ Failed");
+        }
+        (0, ResponseHandler_1.ResponseHandler)(res, 200, "All orders", allOrders);
     }
     catch (error) {
-        console.error("Get all orders error:", error);
         (0, ResponseHandler_1.ErrorHandler)(res, "FAILED_TO_FETCH_ORDERS", 500);
     }
 }));
@@ -32,10 +37,14 @@ exports.updateOrderStatus = (0, express_async_handler_1.default)((req, res) => _
         const { orderId } = req.params;
         const { status } = req.body;
         const updatedOrder = yield order_service_1.default.updateOrderStatus(orderId, status);
+        cache_1.cache.keys().forEach((key) => {
+            if (key.startsWith(`user:order:${orderId}`)) {
+                cache_1.cache.del(key);
+            }
+        });
         (0, ResponseHandler_1.ResponseHandler)(res, 200, "Order status updated", updatedOrder);
     }
     catch (error) {
-        console.error("Update order status error:", error);
         if (error.message === "INVALID_STATUS") {
             return (0, ResponseHandler_1.ErrorHandler)(res, "INVALID_STATUS", 400);
         }
@@ -52,7 +61,6 @@ exports.getDirectPurchaseHistory = (0, express_async_handler_1.default)((req, re
         (0, ResponseHandler_1.ResponseHandler)(res, 200, "History of Purchase", history);
     }
     catch (error) {
-        console.error("Get purchase history error:", error);
         if (error.message === "USER_NOT_FOUND") {
             return (0, ResponseHandler_1.ErrorHandler)(res, "USER_NOT_FOUND", 404);
         }
@@ -66,7 +74,6 @@ exports.getUserOrder = (0, express_async_handler_1.default)((req, res) => __awai
         (0, ResponseHandler_1.ResponseHandler)(res, 200, "Purchase details retrieved", orders);
     }
     catch (error) {
-        console.error("Get user orders error:", error);
         if (error.message === "ORDER_NOT_FOUND") {
             return (0, ResponseHandler_1.ErrorHandler)(res, "ORDER_NOT_FOUND", 404);
         }
@@ -84,7 +91,7 @@ exports.checkProductAvailability = (0, express_async_handler_1.default)((req, re
 exports.directPurchase = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const userId = req._id;
-        const { productId, quantity = 1, transactionHash, email, fullName, phoneNumber, saveDetailsToProfile = false, } = req.body;
+        const { productId, quantity = 1, transactionHash, email, fullName, phoneNumber, saveDetailsToProfile = false, contractAddress } = req.body;
         const result = yield order_service_1.default.directPurchase({
             userId,
             productId,
@@ -94,11 +101,16 @@ exports.directPurchase = (0, express_async_handler_1.default)((req, res) => __aw
             fullName,
             phoneNumber,
             saveDetailsToProfile,
+            contractAddress
+        });
+        cache_1.cache.keys().forEach((key) => {
+            if (key.startsWith(`user:order:${userId}`)) {
+                cache_1.cache.del(key);
+            }
         });
         (0, ResponseHandler_1.ResponseHandler)(res, 201, "Purchase successful", result);
     }
     catch (error) {
-        console.error("Direct purchase controller error:", error);
         if (error.message === "INVALID_PRODUCT_ID") {
             return (0, ResponseHandler_1.ErrorHandler)(res, "INVALID_PRODUCT_ID", 400);
         }
@@ -122,10 +134,14 @@ exports.getUserPurchaseHistory = (0, express_async_handler_1.default)((req, res)
         const userId = req._id;
         const { status } = req.query;
         const orders = yield order_service_1.default.getUserPurchaseHistory(userId, status);
+        if (req.cacheKey && orders) {
+            const cacheData = JSON.parse(JSON.stringify(orders));
+            const success = cache_1.cache.set(req.cacheKey, cacheData, 600);
+            console.log(`Cache set for ${req.cacheKey}:`, success ? "✅ Success" : "❌ Failed");
+        }
         (0, ResponseHandler_1.ResponseHandler)(res, 200, "User purchase history retrieved", orders);
     }
     catch (error) {
-        console.error("Get user purchase history error:", error);
         (0, ResponseHandler_1.ErrorHandler)(res, "FAILED_TO_FETCH_PURCHASE_HISTORY", 500);
     }
 }));

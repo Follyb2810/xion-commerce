@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.auth = void 0;
-const jwt_1 = __importDefault(require("../utils/jwt"));
+const jwt_1 = __importDefault(require("./../common/libs/jwt"));
 const jsonwebtoken_1 = require("jsonwebtoken");
 const auth = (req, res, next) => {
     try {

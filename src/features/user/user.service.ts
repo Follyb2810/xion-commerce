@@ -79,19 +79,75 @@ class UserService {
       { $addToSet: { role: Roles.SELLER } }
     );
   }
+async updateUserRole(
+  id: string,
+  role: string,
+  action: "add" | "remove" = "add"
+) {
+  const normalizedRole = role.toLowerCase() as Roles;
+  const normalizedAction = action.toLowerCase();
 
-  async removeUserRole(id: string, role: string) {
-    if (!Object.values(Roles).includes(role as Roles)) {
-      throw new Error("INVALID_ROLE");
-    }
-
-    const user = await this.userRepository.findById(id);
-    if (!user) {
-      throw new Error("USER_NOTFOUND");
-    }
-
-    await this.userRepository.updateOne({ _id: id }, { $pull: { role } });
+  if (!Object.values(Roles).includes(normalizedRole)) {
+    throw new Error("INVALID_ROLE");
   }
+
+  const user = await this.userRepository.findById(id);
+  if (!user) {
+    throw new Error("USER_NOTFOUND");
+  }
+
+  if (normalizedAction === "add") {
+    if (user.role.includes(normalizedRole)) {
+      throw new Error("ROLE_ALREADY_ASSIGNED");
+    }
+
+    if (normalizedRole === Roles.SUPERADMIN) {
+      const existingSuperAdmin = await this.userRepository.findByEntity({
+        role: Roles.SUPERADMIN,
+      });
+      if (existingSuperAdmin) {
+        throw new Error("ONLY_ONE_SUPERADMIN_ALLOWED");
+      }
+    }
+
+    await this.userRepository.updateOne(
+      { _id: id },
+      { $push: { role: normalizedRole } }
+    );
+  }
+
+  if (normalizedAction === "remove") {
+    if (!user.role.includes(normalizedRole)) {
+      throw new Error("ROLE_NOT_ASSIGNED");
+    }
+    if (
+      normalizedRole === Roles.BUYER &&
+      user.role.length === 1 &&
+      user.role[0] === Roles.BUYER
+    ) {
+      throw new Error("CANNOT_REMOVE_SOLE_BUYER_ROLE");
+    }
+
+    if (normalizedRole === Roles.SUPERADMIN) {
+      const allSuperAdmins = await this.userRepository.getAll(undefined,{
+        role: Roles.SUPERADMIN,
+      });
+      if (
+        allSuperAdmins.length === 1 &&
+        allSuperAdmins[0]._id.toString() === id
+      ) {
+        throw new Error("CANNOT_REMOVE_LAST_SUPERADMIN");
+      }
+    }
+
+    await this.userRepository.updateOne(
+      { _id: id },
+      { $pull: { role: normalizedRole } }
+    );
+  }
+}
+
+
 
   async updateUserProfile(
     id: string,
@@ -184,17 +240,15 @@ class UserService {
   async updateProfileWithWallet(updateProfile: IUserWallet) {
     if (!updateProfile.userId) {
       throw new Error("UNAUTHORIZED");
-      
     }
 
     const user = await this.userRepository.findById(updateProfile.userId);
     if (!user) {
-      throw new Error('USER_NOT_FOUND');
+      throw new Error("USER_NOT_FOUND");
     }
 
     if (updateProfile.email && user.email) {
       throw new Error("You cannot change your email");
-    
     }
 
     if (
@@ -206,7 +260,6 @@ class UserService {
       });
       if (existingUser) {
         throw new Error("Wallet address is already in use");
-        
       }
 
       if (!user.email) {

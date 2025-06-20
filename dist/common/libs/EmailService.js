@@ -62,14 +62,13 @@ class EmailService {
                     html: emailBody,
                     attachments,
                 });
-                console.log(`Message sent: ${info.messageId}`);
                 const previewUrl = nodemailer_1.default.getTestMessageUrl(info);
                 if (previewUrl) {
-                    console.log(`Preview URL: ${previewUrl}`);
+                    console.warn(`Preview URL: ${previewUrl}`);
                 }
             }
             catch (error) {
-                console.error("Error sending email:", error.message);
+                console.warn("Error sending email:", error.message);
                 throw new Error(`Failed to send email: ${error.message}`);
             }
         });

@@ -4,7 +4,7 @@ import {
   getCheckoutData,
   login,
   register,
-  removeUserRole,
+  updateUserRole,
   SingleUser,
   updateUserProfile,
   UserProfile,
@@ -14,11 +14,15 @@ import { auth } from "./../../middleware/auth";
 import MulterService from "./../../common/libs/multer";
 import { getKycStatus, uploadKycDocuments, verifyKYC } from "./kyc.controller";
 import checkCache from "../../middleware/checkCache";
+import { verifyRole } from "../../middleware/verifyRole";
+import { Roles } from "../../common/types/IUser";
 
 const router = express.Router();
 
 router.get(
   "/user",
+  auth,
+  verifyRole(Roles.ADMIN),
   checkCache((req) => `users:list`),
   allUser
 );
@@ -38,7 +42,7 @@ router.get(
   getCheckoutData
 );
 router.get("/verify/:id", auth, verifyUser);
-router.put("/remove-role/:id", auth, removeUserRole);
+router.patch("/update-role/:id", auth, verifyRole(Roles.ADMIN), updateUserRole);
 router.get("/user/:id", auth, SingleUser);
 router.patch("/profile", auth, updateUserProfile);
 router.post(

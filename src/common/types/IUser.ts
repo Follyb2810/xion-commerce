@@ -9,6 +9,7 @@ export enum Roles {
   SUPERADMIN = "superadmin",
 }
 
+
 export enum KYCStatus {
   NOT_SUBMITTED = "not_submitted",
   PENDING = "pending",

@@ -4,6 +4,7 @@ exports.allowedOrigins = void 0;
 exports.allowedOrigins = [
     "http://localhost:8081",
     "http://localhost:5173",
+    "http://localhost:3000",
     "https://warp-commerce.vercel.app",
     "https://follyb.vercel.app",
     "https://warp-commerce.onrender.com",

@@ -17,7 +17,6 @@ class JwtService {
             return (0, jsonwebtoken_1.sign)(payload, this.getSecret(), { expiresIn });
         }
         catch (error) {
-            console.error("Error signing token:", error);
             throw error;
         }
     }
@@ -26,7 +25,6 @@ class JwtService {
             return (0, jsonwebtoken_1.verify)(token, this.getSecret());
         }
         catch (error) {
-            console.error("Error verifying token:", error);
             throw error;
         }
     }

@@ -17,11 +17,18 @@ const express_async_handler_1 = __importDefault(require("express-async-handler")
 const ResponseHandler_1 = require("./../../common/exceptions/ResponseHandler");
 const ProductResponse_1 = require("./../../middleware/ProductResponse");
 const cart_service_1 = __importDefault(require("./cart.service"));
+const cache_1 = require("../../common/libs/cache");
 exports.addToCart = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userId = req._id;
     const { productId, quantity = 1 } = req.body;
     try {
         yield cart_service_1.default.addProductToCart(userId, productId, quantity);
+        cache_1.cache.del(`carts:${userId}`); // carts:list
+        cache_1.cache.keys().forEach((key) => {
+            if (key.startsWith("cart")) {
+                cache_1.cache.del(key);
+            }
+        });
         (0, ResponseHandler_1.ResponseHandler)(res, 200, "Cart Successfully Added");
     }
     catch (error) {
@@ -40,6 +47,12 @@ exports.addToCart = (0, express_async_handler_1.default)((req, res) => __awaiter
 exports.getCart = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userId = req._id;
     const cart = yield cart_service_1.default.getUserCart(userId);
+    if (req.cacheKey && cart) {
+        // console.log(JSON.stringify(cart, null, 2));
+        const cacheData = JSON.parse(JSON.stringify(cart));
+        const success = cache_1.cache.set(req.cacheKey, cacheData, 600);
+        console.log(`Cache set for key ${req.cacheKey}:`, success ? "Success" : "Failed");
+    }
     (0, ResponseHandler_1.ResponseHandler)(res, 200, "User Cart", cart);
 }));
 exports.removeCart = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -47,6 +60,7 @@ exports.removeCart = (0, express_async_handler_1.default)((req, res) => __awaite
     const { productId, quantity = 1 } = req.body;
     try {
         const cart = yield cart_service_1.default.removeProductFromCart(userId, productId, quantity);
+        cache_1.cache.del(`cart:${userId}`); // cart:123
         (0, ResponseHandler_1.ResponseHandler)(res, 200, "Item removed from cart", cart);
     }
     catch (error) {
@@ -67,6 +81,7 @@ exports.deleteUserCart = (0, express_async_handler_1.default)((req, res) => __aw
     const { cartId } = req.params;
     try {
         yield cart_service_1.default.deleteCart(userId, cartId);
+        cache_1.cache.del(`cart:${userId}`); // cart:123
         (0, ResponseHandler_1.ResponseHandler)(res, 200, "Cart deleted successfully");
     }
     catch (error) {
@@ -90,6 +105,7 @@ exports.checkout = (0, express_async_handler_1.default)((req, res) => __awaiter(
     const { transactionHash } = req.body;
     try {
         const checkoutResult = yield cart_service_1.default.processCheckout(userId, transactionHash);
+        cache_1.cache.del(`cart:${userId}`); // cart:123
         (0, ResponseHandler_1.ResponseHandler)(res, 200, "Checkout successful", checkoutResult);
     }
     catch (error) {

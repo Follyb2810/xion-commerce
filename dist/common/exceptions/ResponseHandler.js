@@ -40,7 +40,13 @@ exports.AppError = {
     INVALID_FILE: "Invalid document file or image",
     PRODUCT_DEL: "Cannot delete product with remaining stock",
     XION_BALANCE: "Error fetching balance",
-    ERROR_XION: "Error ",
+    ERROR_XION: "Error",
+    XION_CONTRACT: "Error Cannot deposit. Contract status is",
+    INVALID_CONTRACT_STATE: "Invalid contract state",
+    XION_DEPOSIT_ERROR: 'xion deposit error',
+    XION_EXECUTE_ERROR: 'Xion execute error',
+    UPLOAD_FAILED: 'Upload failed',
+    DEPLOY_FAILED: 'Deploy failed'
 };
 function ErrorHandler(res, errorKey, statusCode) {
     const errorMessage = exports.AppError[errorKey] || "An unexpected error occurred";

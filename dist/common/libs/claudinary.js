@@ -15,7 +15,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const cloudinary_1 = require("cloudinary");
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
-console.log(process.env.PORT);
 cloudinary_1.v2.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,

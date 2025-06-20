@@ -12,11 +12,17 @@ import XionWallet from "./XionWallet";
 import XionConnect from "./XionConnect";
 import { XionUtils } from "./XionUtils";
 import { readFileSync } from "fs";
+import path from "path";
+
+const WASM_FILE_PATH = path.join(
+  __dirname,
+  "../artifacts/escrow_contract.wasm"
+);
 
 class XionTransaction {
   private readonly xionWallet: XionWallet;
   private readonly xionConnect: XionConnect;
-  private readonly contractAddress: string;
+  // private readonly contractAddress?: string; 
   private readonly adminAddress: string;
 
   constructor(config?: {
@@ -27,14 +33,10 @@ class XionTransaction {
   }) {
     this.xionConnect = config?.xionConnect ?? new XionConnect();
     this.xionWallet = config?.xionWallet ?? new XionWallet();
-    this.contractAddress =
-      config?.contractAddress ?? (process.env.CONTRACT_ADDRESS as string);
+    // this.contractAddress = config?.contractAddress ?? process.env.CONTRACT_ADDRESS; 
     this.adminAddress =
       config?.adminAddress ?? (process.env.ADMIN_ADDRESS as string);
 
-    if (!this.contractAddress) {
-      throw new Error("Contract address is required");
-    }
     if (!this.adminAddress) {
       throw new Error("Admin address is required");
     }
@@ -73,23 +75,31 @@ class XionTransaction {
     };
   }
 
+
   async executeContract(
+    contractAddress: string, 
     msg: JsonObject,
     funds: { denom: string; amount: string }[] = [],
     mnemonic?: string
   ): Promise<TransactionResult> {
+    // const targetContract = contractAddress || this.contractAddress;
+    
+    if (!contractAddress) {
+      throw new Error("Contract address is required for execution");
+    }
+
     if (!XionUtils.isValidXionAddress(this.adminAddress)) {
       throw new Error(`Invalid sender address: ${this.adminAddress}`);
     }
-    if (!XionUtils.isValidXionAddress(this.contractAddress)) {
-      throw new Error(`Invalid contract address: ${this.contractAddress}`);
+    if (!XionUtils.isValidXionAddress(contractAddress)) {
+      throw new Error(`Invalid contract address: ${contractAddress}`);
     }
 
     try {
       const client = await this.xionConnect.getSigningWasmClient(mnemonic);
       const result = await client.execute(
         this.adminAddress,
-        this.contractAddress,
+        contractAddress,
         msg,
         "auto",
         "Execute contract via XION backend",
@@ -107,7 +117,6 @@ class XionTransaction {
     }
   }
 
-  //? done
   async uploadEscrow(
     senderAddress: string = this.adminAddress,
     mnemonic?: string,
@@ -116,9 +125,9 @@ class XionTransaction {
     if (!XionUtils.isValidXionAddress(senderAddress)) {
       throw new Error(`Invalid sender address: ${senderAddress}`);
     }
-    const WASM_FILE_PATH = "./artifacts/escrow_contract.wasm";
+    
     const wasmCode = wasmFilePath ? wasmFilePath : readFileSync(WASM_FILE_PATH);
-    console.log(`📄 Contract size: ${wasmCode.length} bytes`);
+    
     if (!wasmCode || wasmCode.length === 0) {
       throw new Error("WASM code is required");
     }
@@ -139,7 +148,7 @@ class XionTransaction {
     senderAddress = this.adminAddress,
     codeId,
     msg,
-    label="Escrow Contract Instance",
+    label = "Escrow Contract Instance",
     fee = "auto",
     options,
     mnemonic,
@@ -173,8 +182,8 @@ class XionTransaction {
   }
 
   async queryContract(
+    contractAddress: string,
     msg: JsonObject,
-    contractAddress: string = this.contractAddress,
   ): Promise<IQueryContract> {
     if (!XionUtils.isValidXionAddress(contractAddress)) {
       throw new Error(`Invalid contract address: ${contractAddress}`);
@@ -188,8 +197,15 @@ class XionTransaction {
     senderAddress: string,
     msg: JsonObject,
     funds: { denom: string; amount: string }[] = [],
+    contractAddress: string,
     mnemonic?: string
   ) {
+    // const targetContract = contractAddress || this.contractAddress;
+    
+    if (!contractAddress) {
+      throw new Error("Contract address is required for gas estimation");
+    }
+
     if (!XionUtils.isValidXionAddress(senderAddress)) {
       throw new Error(`Invalid sender address: ${senderAddress}`);
     }
@@ -202,7 +218,7 @@ class XionTransaction {
           typeUrl: "/cosmwasm.wasm.v1.MsgExecuteContract",
           value: {
             sender: senderAddress,
-            contract: this.contractAddress,
+            contract: contractAddress,
             msg: Buffer.from(JSON.stringify(msg)),
             funds,
           },

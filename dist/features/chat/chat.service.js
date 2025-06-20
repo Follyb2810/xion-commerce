@@ -16,10 +16,8 @@ const chat_model_1 = __importDefault(require("./chat.model"));
 const socketConfig_1 = require("./../../config/socketConfig");
 let io = (0, socketConfig_1.getIO)();
 io.on('connection', (socket) => {
-    console.log('User connected:', socket.id);
     socket.on('join', (userId) => {
         socket.userId = userId;
-        console.log(`${userId} joined the chat`);
     });
     socket.on('sendMessage', (_a) => __awaiter(void 0, [_a], void 0, function* ({ sender, receiver, message }) {
         try {
@@ -38,10 +36,8 @@ io.on('connection', (socket) => {
             io.to(receiver).emit('receiveMessage', newMessage);
         }
         catch (error) {
-            console.error('Error sending message:', error);
         }
     }));
     socket.on('disconnect', () => {
-        console.log('User disconnected:', socket.id);
     });
 });

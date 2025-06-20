@@ -11,14 +11,17 @@ import {
 } from "./order.controller";
 import { CheckStock } from "./../../middleware/CheckStock";
 import checkCache from "../../middleware/checkCache";
+import { Roles } from "../../common/types/IUser";
+import { verifyRole } from "../../middleware/verifyRole";
 
 const router = Router();
 
 router.get("/", auth, getDirectPurchaseHistory);
 router.get("/user_order", auth, getUserOrder);
 router.get(
-  "/all",
+  "/all_orders",
   auth,
+  verifyRole(Roles.ADMIN),
   checkCache(() => `order:list`),
   allOrder
 );
@@ -31,16 +34,9 @@ router.get(
 router.put(
   "/:orderId/status",
   auth,
-  checkCache((req) => `user:order:${req.params.orderId}`),
   updateOrderStatus
 );
-// router.put( "/escrow/:orderId", auth,releaseOrCancelEscrow, updateOrderStatus);
 router.post("/available", auth, CheckStock, checkProductAvailability);
 router.post("/confirm", auth, directPurchase);
-/**
-AuthMiddleware, // Ensure user authentication
-  releaseOrCancelEscrow, // First, process escrow transaction
-  updateOrderStatus 
-*/
 
 export default router;

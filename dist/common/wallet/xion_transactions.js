@@ -19,6 +19,7 @@ class XionTransaction {
         this.xionConnect = new xion_connect_1.default();
         this.xionWallet = new xion_wallet_1.default();
         this.contractAddress = process.env.CONTRACT_XION;
+        this.adminAddress = process.env.CONTRACT_XION;
     }
     sendTokens(recipientAddress_1, amount_1) {
         return __awaiter(this, arguments, void 0, function* (recipientAddress, amount, denom = "uxion", memo = "") {
@@ -28,7 +29,7 @@ class XionTransaction {
             return {
                 transactionHash: result.transactionHash,
                 gasUsed: result.gasUsed,
-                gasWanted: result.gasWanted
+                gasWanted: result.gasWanted,
             };
         });
     }
@@ -46,7 +47,35 @@ class XionTransaction {
             }
             catch (error) {
                 console.error("🚨 Smart Contract Execution Error:", error);
+                throw error;
             }
+        });
+    }
+    //? 
+    deployEscrow(wasmCode, senderAddress) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const client = yield this.xionConnect.getSigningWasmClient();
+            // const wasmCode = readFileSync(wasmFilePath);
+            const uploadResult = yield client.upload(senderAddress, wasmCode, "auto", "Escrow Contract v0.1.0");
+            const { codeId, transactionHash } = uploadResult;
+            return { codeId, transactionHash };
+        });
+    }
+    instantiateContract(senderAddress, codeId, msg, label, fee, options) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const client = yield this.xionConnect.getSigningWasmClient();
+            const instantiateResult = yield client.instantiate(senderAddress, codeId, msg, label, (fee = "auto"), {
+                memo: `Instantiating ${label}`,
+                admin: this.adminAddress,
+            });
+            const { contractAddress, transactionHash, gasUsed } = instantiateResult;
+            return { contractAddress, transactionHash, gasUsed };
+        });
+    }
+    queryContact(contractAddress, msg) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const result = (yield this.xionConnect.getQueryCosmWasmClient()).queryContractSmart(contractAddress, msg);
+            return result;
         });
     }
 }

@@ -15,6 +15,7 @@ const orderSchema: Schema = new Schema<IOrder>(
     status: { type: String, enum: Object.values(OrderStatus), default: OrderStatus.PENDING },
     email: { type: String, default: null },
     fullName: { type: String, default: null },
+    contractAddress: { type: String, default: null },
     totalAmount: { type: Number, required: true },
     phoneNumber: { type: Number, required: true },
     payment: {

@@ -206,3 +206,15 @@ Authorization :{{token}}
 DELETE  {{PORT}}/cart/67cdcfc0f23f882cab4975c8
 Content-Type: {{Json}}
 Authorization :{{token}}
+
+
+### escorw
+POST  {{PORT}}/deploy/
+Content-Type: {{Json}}
+Authorization :{{token}}
+
+{
+"buyer":"xion1gapszks8r7fnfgah6qgzt9p8utlsuczthvvy69", 
+"required_deposit":"0.001",
+ "seller":"xion1c6y8tdknd5qpkxtph9l0njj0dxdzglwrw4f3de"
+}

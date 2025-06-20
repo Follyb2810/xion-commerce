@@ -9,6 +9,7 @@ import {
 import UserService from "./user.service";
 import { CacheRequest } from "../../middleware/checkCache";
 import { cache } from "../../common/libs/cache";
+import { Roles } from "../../common/types/IUser";
 
 export const register = AsyncHandler(
   async (req: Request, res: Response): Promise<void> => {
@@ -80,7 +81,7 @@ export const SingleUser = AsyncHandler(
       return ErrorHandler(res, "USER_NOTFOUND", 404);
     }
     if (req.cacheKey && user) {
-      const cacheData = JSON.parse(JSON.stringify({user}));
+      const cacheData = JSON.parse(JSON.stringify({ user }));
       const success = cache.set(req.cacheKey, cacheData, 600);
       console.log(
         `Cache set for key ${req.cacheKey}:`,
@@ -109,14 +110,22 @@ export const verifyUser = AsyncHandler(
   }
 );
 
-export const removeUserRole = AsyncHandler(
+export const updateUserRole = AsyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
-    const { role } = req.body;
+    const { role, action } = req.body;
 
     try {
-      await UserService.removeUserRole(id, role);
-      return ResponseHandler(res, 200, "Role removed successfully");
+      if (!Object.values(Roles).includes(role)) {
+        return ErrorHandler(res, "INVALID_ROLE", 400);
+      }
+      await UserService.updateUserRole(id, role, action);
+      cache.keys().forEach((key) => {
+        if (key.startsWith("user")) {
+          cache.del(key);
+        }
+      });
+      return ResponseHandler(res, 200, `Role ${action} successfully`);
     } catch (error: any) {
       if (error.message === "INVALID_ROLE") {
         return ErrorHandler(res, "INVALID_ROLE", 400);
@@ -138,7 +147,7 @@ export const UserProfile = AsyncHandler(
       return ErrorHandler(res, "USER_NOTFOUND", 404);
     }
     if (req.cacheKey && user) {
-      const cacheData = JSON.parse(JSON.stringify({user}));
+      const cacheData = JSON.parse(JSON.stringify({ user }));
       const success = cache.set(req.cacheKey, cacheData, 600);
       console.log(
         `Cache set for key ${req.cacheKey}:`,
@@ -155,7 +164,7 @@ export const allUser = AsyncHandler(
   async (req: CacheRequest, res: Response): Promise<void> => {
     const users = await UserService.getAllUsers();
     if (req.cacheKey && users) {
-      const cacheData = JSON.parse(JSON.stringify({users}));
+      const cacheData = JSON.parse(JSON.stringify({ users }));
       const success = cache.set(req.cacheKey, cacheData, 600);
       console.log(
         `Cache set for key ${req.cacheKey}:`,
@@ -176,7 +185,7 @@ export const updateUserProfile = AsyncHandler(
     try {
       await UserService.updateUserProfile(id!, { email, phoneNumber, name });
       cache.keys().forEach((key) => {
-        if (key.startsWith('user')) {
+        if (key.startsWith("user")) {
           cache.del(key);
         }
       });
@@ -207,7 +216,7 @@ export const getCheckoutData = AsyncHandler(
 
     const user = await UserService.getUserByWalletAddress(walletAddress);
     if (req.cacheKey && user) {
-      const cacheData = JSON.parse(JSON.stringify({user}));
+      const cacheData = JSON.parse(JSON.stringify({ user }));
       const success = cache.set(req.cacheKey, cacheData, 600);
       console.log(
         `Cache set for key ${req.cacheKey}:`,

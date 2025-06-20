@@ -1,4 +1,3 @@
-
 // const { SigningCosmWasmClient } = require("@cosmjs/cosmwasm-stargate");
 // const { DirectSecp256k1HdWallet } = require("@cosmjs/proto-signing");
 // const { GasPrice } = require("@cosmjs/stargate");
@@ -40,12 +39,11 @@
 // }
 // main().catch(console.error);
 
-
 import { SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { GasPrice } from "@cosmjs/stargate";
 import { readFileSync } from "fs";
- import dotenv from "dotenv"
+import dotenv from "dotenv";
 
 dotenv.config();
 
@@ -55,11 +53,11 @@ const XION_RPC_ENDPOINT = "https://rpc.xion-testnet-2.burnt.com:443"; // Testnet
 
 const XION_CHAIN_ID = "xion-testnet-2"; // Use "xion-mainnet-1" for mainnet
 // const XION_DENOM = "uxion";
-const XION_DENOM = "ibc/6490A7EAB61059BFC1CDDEB05917DD70BDF3A611654162A1A47DB930D40D8AF4"
+const XION_DENOM =
+  "ibc/6490A7EAB61059BFC1CDDEB05917DD70BDF3A611654162A1A47DB930D40D8AF4";
 const GAS_PRICE = "0.025uxion";
 const mnemonic = process.env.MNEMONIC;
 const WASM_FILE_PATH = "../artifacts/escrow_contract.wasm";
-
 
 class XionContractDeployer {
   constructor() {
@@ -71,9 +69,9 @@ class XionContractDeployer {
   async initialize(mnemonic) {
     try {
       console.log("🚀 Initializing Xion Network connection...");
-      
+
       // Create wallet from mnemonic
-       
+
       this.wallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, {
         prefix: "xion",
       });
@@ -93,11 +91,14 @@ class XionContractDeployer {
       );
 
       console.log("✅ Connected to Xion Network successfully!");
-      
+
       // Check balance
-      const balance = await this.client.getBalance(this.senderAddress, XION_DENOM);
+      const balance = await this.client.getBalance(
+        this.senderAddress,
+        XION_DENOM
+      );
       console.log(`💰 Balance: ${balance.amount} ${balance.denom}`);
-      
+
       return true;
     } catch (error) {
       console.error("❌ Failed to initialize:", error);
@@ -108,7 +109,7 @@ class XionContractDeployer {
   async uploadContract(wasmFilePath) {
     try {
       console.log("📤 Uploading contract to Xion Network...");
-      
+
       // Read the compiled wasm file
       const wasmCode = readFileSync(wasmFilePath);
       console.log(`📄 Contract size: ${wasmCode.length} bytes`);
@@ -136,7 +137,10 @@ class XionContractDeployer {
   async instantiateContract(codeId, instantiateMsg, label, admin = null) {
     try {
       console.log("🏗️ Instantiating contract...");
-      console.log(`📝 Instantiate message:`, JSON.stringify(instantiateMsg, null, 2));
+      console.log(
+        `📝 Instantiate message:`,
+        JSON.stringify(instantiateMsg, null, 2)
+      );
 
       const instantiateResult = await this.client.instantiate(
         this.senderAddress,
@@ -165,7 +169,10 @@ class XionContractDeployer {
   async queryContract(contractAddress, queryMsg) {
     try {
       console.log("🔍 Querying contract...");
-      const result = await this.client.queryContractSmart(contractAddress, queryMsg);
+      const result = await this.client.queryContractSmart(
+        contractAddress,
+        queryMsg
+      );
       console.log("📊 Query result:", JSON.stringify(result, null, 2));
       return result;
     } catch (error) {
@@ -178,7 +185,7 @@ class XionContractDeployer {
     try {
       console.log("⚡ Executing contract...");
       console.log(`📝 Execute message:`, JSON.stringify(executeMsg, null, 2));
-      
+
       const executeResult = await this.client.execute(
         this.senderAddress,
         contractAddress,
@@ -203,18 +210,16 @@ class XionContractDeployer {
 // Main deployment function
 async function deployEscrowContract() {
   const deployer = new XionContractDeployer();
-  
+
   // Configuration - UPDATE THESE VALUES
   // const MNEMONIC = "your twelve word mnemonic phrase goes here for wallet access";
-  
-  
+
   // Escrow contract parameters
   const BUYER_ADDRESS = "xion1gapszks8r7fnfgah6qgzt9p8utlsuczthvvy69"; // Replace with actual buyer address
   const SELLER_ADDRESS = "xion1c6y8tdknd5qpkxtph9l0njj0dxdzglwrw4f3de"; // Replace with actual seller address
   const MARKETPLACE_ADDRESS = "xion1uy2glj674hx2k02wwc8ctgk3cfhfu7z0vyduww"; // Replace with actual marketplace address
   const REQUIRED_DEPOSIT = "1000000"; // 1 XION (in uxion)
   const FEE_PERCENTAGE = 5; // 5% fee
-  
 
   try {
     // Initialize connection
@@ -272,14 +277,16 @@ async function deployEscrowContract() {
     console.log("\n" + "📚 USAGE EXAMPLES:");
     console.log("=".repeat(30));
     console.log("1. Deposit funds (buyer only):");
-    console.log(`   executeContract("${contractAddress}", { deposit: {} }, [{ denom: "${XION_DENOM}", amount: "${REQUIRED_DEPOSIT}" }])`);
-    
+    console.log(
+      `executeContract("${contractAddress}", { deposit: {} }, [{ denom: "${XION_DENOM}", amount: "${REQUIRED_DEPOSIT}" }])`
+    );
+
     console.log("\n2. Release funds (marketplace only):");
     console.log(`   executeContract("${contractAddress}", { release: {} })`);
-    
+
     console.log("\n3. Refund funds (marketplace only):");
     console.log(`   executeContract("${contractAddress}", { refund: {} })`);
-    
+
     console.log("\n4. Query contract state:");
     console.log(`   queryContract("${contractAddress}", { get_state: {} })`);
 
@@ -288,7 +295,6 @@ async function deployEscrowContract() {
       contractAddress,
       deployer: deployer.senderAddress,
     };
-
   } catch (error) {
     console.error("💥 Deployment failed:", error);
     process.exit(1);
@@ -323,7 +329,6 @@ async function interactWithContract(contractAddress, mnemonic) {
     console.log("\n3. Releasing funds...");
     await deployer.executeContract(contractAddress, { release: {} });
     */
-
   } catch (error) {
     console.error("❌ Interaction failed:", error);
   }

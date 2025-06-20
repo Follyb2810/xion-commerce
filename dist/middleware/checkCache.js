@@ -1,17 +1,66 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const cache_1 = require("../utils/cache");
+const cache_1 = require("./../common/libs/cache");
+const ResponseHandler_1 = require("../common/exceptions/ResponseHandler");
 const checkCache = (keyGenerator) => (req, res, next) => {
-    const key = keyGenerator ? keyGenerator(req) : req.originalUrl;
-    const cachedData = cache_1.cache.get(key);
-    if (cachedData) {
-        console.log(`Cache hit for key: ${key}`);
-        return res.status(200).json({ source: "cache", data: cachedData });
+    // const baseKey = keyGenerator ? keyGenerator(req) : req.originalUrl;
+    const baseKey = keyGenerator(req);
+    console.log("Checking cache for key:", baseKey);
+    const result = cache_1.cache.get(baseKey);
+    console.log("Cache result:", result ? "Hit" : "Miss");
+    if (result) {
+        console.log("Cache hit for:", baseKey);
+        return (0, ResponseHandler_1.ResponseHandler)(res, 200, "Cache hit", result);
     }
-    console.log(`Cache miss for key: ${key}`);
-    req.cacheKey = key;
+    req.cacheKey = baseKey;
+    console.log("Cache miss, proceeding to handler");
+    console.log("Middleware key:", baseKey);
+    console.log("Route handler key:", req.cacheKey);
     next();
 };
+// export interface CacheRequest extends AuthRequest {
+//   cacheKey?: string;
+// }
+// type KeyGenerator = (req: CacheRequest) => string;
+// const checkCache =
+//   (
+//     keyGenerator?: KeyGenerator
+//   ): RequestHandler<any, any, any, any, CacheRequest> =>
+//   (req: CacheRequest, res: Response, next: NextFunction) => {
+//     const baseKey = keyGenerator ? keyGenerator(req) : req.originalUrl;
+//     console.log("Cache key:", baseKey);
+//     const result = cache.get(baseKey);
+//     console.log({ result });
+//     if (result) {
+//       console.log("Cache hit for:", baseKey);
+//       return ResponseHandler(res, 200, "cache", result);
+//     }
+//     req.cacheKey = baseKey;
+//     console.log("Cache miss, proceeding to handler");
+//     next();
+//   };
+// const checkCache =
+//   (
+//     keyGenerator?: KeyGenerator
+//   ): RequestHandler<any, any, any, any, CacheRequest> =>
+//   (req: CacheRequest, res: Response, next: NextFunction) => {
+//     console.log({ originalUrl: req.originalUrl });
+//     const key = keyGenerator ? keyGenerator(req) : req.originalUrl;
+//     console.log({ key });
+//     const result = cache.get(key);
+//     console.log({ result });
+//     if (result) {
+//       ResponseHandler(res, 200, "cache", result);
+//       return;
+//     }
+//     console.log({ cacheKey: req.cacheKey }, "first");
+//     // req.cacheKey = key;
+//     // (req as CacheRequest).cacheKey = key;
+//     req.cacheKey = key;
+//     console.log({ cacheKey: req.cacheKey }, "second");
+//     console.log("All cache keys:", cache.keys());
+//     next();
+//   };
 exports.default = checkCache;
 // router.get(
 //   '/:productId',

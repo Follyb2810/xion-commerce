@@ -181,7 +181,7 @@ class ProductService {
             }
             if (updateData.mapping_location) {
                 let mappingLocation;
-                if (typeof updateData.mapping_location === 'object') {
+                if (typeof updateData.mapping_location === "object") {
                     mappingLocation = updateData.mapping_location;
                 }
                 else {

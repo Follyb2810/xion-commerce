@@ -14,8 +14,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const user_repository_1 = __importDefault(require("./user.repository"));
 const IUser_1 = require("./../../common/types/IUser");
-const bcrypt_1 = require("./../../utils/bcrypt");
-const jwt_1 = __importDefault(require("./../../utils/jwt"));
+const bcrypt_1 = require("./../../common/libs/bcrypt");
+const jwt_1 = __importDefault(require("./../../common/libs/jwt"));
 const crypto_1 = __importDefault(require("crypto"));
 class UserService {
     constructor(userRepository) {
@@ -81,16 +81,51 @@ class UserService {
             yield this.userRepository.updateOne({ _id: id }, { $addToSet: { role: IUser_1.Roles.SELLER } });
         });
     }
-    removeUserRole(id, role) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (!Object.values(IUser_1.Roles).includes(role)) {
+    updateUserRole(id_1, role_1) {
+        return __awaiter(this, arguments, void 0, function* (id, role, action = "add") {
+            const normalizedRole = role.toLowerCase();
+            const normalizedAction = action.toLowerCase();
+            if (!Object.values(IUser_1.Roles).includes(normalizedRole)) {
                 throw new Error("INVALID_ROLE");
             }
             const user = yield this.userRepository.findById(id);
             if (!user) {
                 throw new Error("USER_NOTFOUND");
             }
-            yield this.userRepository.updateOne({ _id: id }, { $pull: { role } });
+            if (normalizedAction === "add") {
+                if (user.role.includes(normalizedRole)) {
+                    throw new Error("ROLE_ALREADY_ASSIGNED");
+                }
+                if (normalizedRole === IUser_1.Roles.SUPERADMIN) {
+                    const existingSuperAdmin = yield this.userRepository.findByEntity({
+                        role: IUser_1.Roles.SUPERADMIN,
+                    });
+                    if (existingSuperAdmin) {
+                        throw new Error("ONLY_ONE_SUPERADMIN_ALLOWED");
+                    }
+                }
+                yield this.userRepository.updateOne({ _id: id }, { $push: { role: normalizedRole } });
+            }
+            if (normalizedAction === "remove") {
+                if (!user.role.includes(normalizedRole)) {
+                    throw new Error("ROLE_NOT_ASSIGNED");
+                }
+                if (normalizedRole === IUser_1.Roles.BUYER &&
+                    user.role.length === 1 &&
+                    user.role[0] === IUser_1.Roles.BUYER) {
+                    throw new Error("CANNOT_REMOVE_SOLE_BUYER_ROLE");
+                }
+                if (normalizedRole === IUser_1.Roles.SUPERADMIN) {
+                    const allSuperAdmins = yield this.userRepository.getAll(undefined, {
+                        role: IUser_1.Roles.SUPERADMIN,
+                    });
+                    if (allSuperAdmins.length === 1 &&
+                        allSuperAdmins[0]._id.toString() === id) {
+                        throw new Error("CANNOT_REMOVE_LAST_SUPERADMIN");
+                    }
+                }
+                yield this.userRepository.updateOne({ _id: id }, { $pull: { role: normalizedRole } });
+            }
         });
     }
     updateUserProfile(id, updates) {
@@ -166,7 +201,7 @@ class UserService {
             }
             const user = yield this.userRepository.findById(updateProfile.userId);
             if (!user) {
-                throw new Error('USER_NOT_FOUND');
+                throw new Error("USER_NOT_FOUND");
             }
             if (updateProfile.email && user.email) {
                 throw new Error("You cannot change your email");
